@@ -2,7 +2,7 @@
 #include <limits>
 
 #include "../sources/logxx/logxx.h"
-#include "../sources/deck.h"
+#include "../sources/patience/medici.h"
 
 static logxx::Log cLog("test");
         
@@ -24,7 +24,23 @@ inline bool Conditions(const std::vector<PlayingCard> &deck, const PlayingCard &
                 deck[35].GetNumber() == PlayingCard::Ten;
 }
 
-int rnd(int i){ return std::rand() % i; }
+size_t rnd(size_t i){ return std::rand() % i; }
+
+void PrintDeck(const std::vector<PlayingCard>& deck, bool abbrevations = true){
+        S_LOG("PrintDeck");
+        auto &s = log(logxx::info);
+        for (auto it = deck.begin(); it != deck.end(); ++it){
+                const PlayingCard &card = *it;
+                s << card.Print(abbrevations);
+                if (it + 1 != deck.end())
+                        s << ", ";
+        }
+        s << logxx::endl;
+}
+
+void PrintDeck(const Deck& d, bool abbrevations = true){
+        PrintDeck(d.GetDeck(), abbrevations);
+}
 
 int main() {
         S_LOG("main");
@@ -81,58 +97,57 @@ int main() {
         
 //        Deck deck;
 //        deck.Print(true);
-
-	std::srand(time(nullptr));
-
-        PlayingCard target("Xч");
-        Deck testDeck;
-        Deck idealDeck;
-        std::vector<PlayingCard> deck = testDeck.GetDeck();
-        unsigned int maxCollapses(0);
-        for (long long int i = 0; i < std::numeric_limits<decltype(i)>::max(); ++i){
-                if (Conditions(deck, target)){
-                        testDeck.SetDeck(deck);
-                        if (testDeck.Collapse()){
-                                auto targetCollapses = testDeck.collapses[target];
-                                if (targetCollapses > maxCollapses){
-                                        maxCollapses = targetCollapses;
-                                        testDeck.Print(true);
-                                        log(logxx::info) << target.Print() << " collapses: " << targetCollapses << logxx::endl;
-                                        idealDeck = testDeck;
-                                }
-//                                log(logxx::info) << "Collapses: " << logxx::endl;
-//                                for (auto &pair : testDeck.collapses){
-//                                        log(logxx::info) << pair.first.Print() << ": " << pair.second << logxx::endl;
-//                                }
+        
+//	std::srand(time(nullptr));
+//
+//        PlayingCard target("Xч");
+//        Medici testDeck;
+//        Medici idealDeck;
+//        std::vector<PlayingCard> deck = Deck::GenerateDeck();
+////        unsigned int maxCollapses(0);
+//        long int collapsed(0), conditionsMet(0);
+//        for (long long int i = 0; i < std::numeric_limits<decltype(i)>::max(); ++i){
+////                if (Conditions(deck, target)){
+////                        testDeck.SetDeck(deck);
+////                        if (testDeck.Collapse()){
+////                                auto targetCollapses = testDeck.GetCollapses(target);
+////                                if (targetCollapses > maxCollapses){
+////                                        maxCollapses = targetCollapses;
+////                                        PrintDeck(testDeck);
+////                                        log(logxx::info) << target.Print() << " collapses: " << targetCollapses << logxx::endl;
+////                                        idealDeck = testDeck;
+////                                }
+////                        }
+////                } else {
+//		if (Conditions(deck, target)){
+//			++conditionsMet;
+//                	testDeck.SetDeck(deck);
+//	                if (testDeck.Collapse())
+//	                        ++collapsed;
+//		}
+//                
+//                        static time_t start(time(nullptr));
+//                        time_t now(time(nullptr));
+//                        static const time_t maxExecutionTime = 60;
+//                        if (now > start + maxExecutionTime){
+//                                log(logxx::info) << "Combinations: " << i << logxx::endl;
 //                                break;
-                        }
-                } else {
-                        static time_t start(time(nullptr));
-                        time_t now(time(nullptr));
-                        static const time_t interval = 60;
-                        if (now > start + interval){
-                                log(logxx::info) << i << logxx::endl;
-                                break;
-//                                start = now;
-//                                Deck test(deck);
-//                                test.Print(true);
-                        }
-                }
-//                if (std::find(deck.begin(), deck.end(), target) != end()){
-//                        Deck test(deck);
-//                        test.Print(true);
-//                        break;
-//                }
-//                if (!std::next_permutation(deck.begin(), deck.end()))
-//                        break;
-                std::random_shuffle(deck.begin(), deck.end(), rnd);
-        }
-        log(logxx::info) << "Selected deck: " << logxx::endl;
-        idealDeck.Print(true);
-        log(logxx::info) << "Collapses: " << logxx::endl;
-        for (auto &pair : idealDeck.collapses){
-                log(logxx::info) << pair.first.Print() << ": " << pair.second << logxx::endl;
-        }
+//                        }
+////                }
+//                //std::random_shuffle(deck.begin(), deck.end(), rnd);
+//                Deck::Mix(deck, rnd);
+//        }
+//        log(logxx::info) << "Collapsed: " << collapsed << logxx::endl;
+//        log(logxx::info) << "Conditions met: " << conditionsMet << logxx::endl;
+        
+//        Deck::Mix()
+        
+//        log(logxx::info) << "Selected deck: " << logxx::endl;
+//        PrintDeck(idealDeck);
+//        log(logxx::info) << "Collapses: " << logxx::endl;
+//        for (auto &pair : idealDeck.GetCollapses()){
+//                log(logxx::info) << pair.first.Print() << ": " << pair.second << logxx::endl;
+//        }
         
         return 0;
 }
