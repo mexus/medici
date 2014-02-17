@@ -16,7 +16,7 @@ inline bool Conditions(const std::vector<PlayingCard> &deck, const PlayingCard &
         return 
                 deck[0].GetNumber() == PlayingCard::Jack &&
                 deck[1].GetNumber() == PlayingCard::Nine &&
-                (deck[2].GetNumber() == PlayingCard::Ace || PlayingCard::Ten) &&
+                (deck[2].GetNumber() == PlayingCard::Ace || deck[2].GetNumber() == PlayingCard::Ten) &&
                 std::find(targetBegin, targetEnd, target) != targetEnd &&
                 std::find_if(ownActionsBegin, ownActionsEnd, [](const PlayingCard& p)->bool{
                         return p.GetNumber() == PlayingCard::Ace;
