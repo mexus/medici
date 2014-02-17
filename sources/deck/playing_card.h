@@ -33,8 +33,6 @@ public:
         static const std::map<Number, std::string> numbersNamesAbbrevations;
         
         PlayingCard();
-        PlayingCard(Number, Suit);
-        PlayingCard(const PlayingCard&);
         PlayingCard(const std::string&);
         virtual ~PlayingCard();
         
@@ -47,8 +45,8 @@ public:
         friend bool operator == (const PlayingCard& lhs, const PlayingCard& rhs);
         friend bool operator < (const PlayingCard& lhs, const PlayingCard& rhs);
 private:
-        Suit suit;
         Number number;
+        Suit suit;
 };
 
 bool operator == (const PlayingCard& lhs, const PlayingCard& rhs);

@@ -36,10 +36,7 @@ const std::map<PlayingCard::Number, std::string> PlayingCard::numbersNamesAbbrev
         {Ace, "Т"},
 };
 
-PlayingCard::PlayingCard() : suit(Hearts), number(Six) {
-}
-
-PlayingCard::PlayingCard(Number number, Suit suit) : suit(suit), number(number) {
+PlayingCard::PlayingCard() : number(Six), suit(Hearts) {
 }
 
 PlayingCard::PlayingCard(const std::string& s) {
@@ -56,7 +53,7 @@ PlayingCard::PlayingCard(const std::string& s) {
                 }
         }
         if (!set)
-                throw std::logic_error("Can't find number for a {" + tmp + "}");
+                throw std::logic_error("Can't find a number for a {" + tmp + "}");
         set = false;
         for (auto &pair : suitsNamesAbbrevations){
                 const std::string &currentSuit = pair.second;
@@ -67,10 +64,7 @@ PlayingCard::PlayingCard(const std::string& s) {
                 }
         }
         if (!set)
-                throw std::logic_error("Can't find suit for a {" + tmp + "}");
-}
-
-PlayingCard::PlayingCard(const PlayingCard& old) : suit(old.suit), number(old.number) {
+                throw std::logic_error("Can't find a suit for a {" + tmp + "}");
 }
 
 PlayingCard::~PlayingCard() {
@@ -95,9 +89,9 @@ PlayingCard& PlayingCard::Next(bool &reachedEnd) {
 
 std::string PlayingCard::Print(bool abbrevation) const {
         if (abbrevation)
-                return std::string(numbersNamesAbbrevations.at(number)).append(suitsNamesAbbrevations.at(suit));
+                return numbersNamesAbbrevations.at(number) + suitsNamesAbbrevations.at(suit);
         else
-                return std::string(numbersNames.at(number)).append(" ").append(suitsNames.at(suit));
+                return numbersNames.at(number) + " " + suitsNames.at(suit);
 
 }
 bool operator == (const PlayingCard& lhs, const PlayingCard& rhs){
