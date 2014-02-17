@@ -24,6 +24,8 @@ inline bool Conditions(const std::vector<PlayingCard> &deck, const PlayingCard &
                 deck[35].GetNumber() == PlayingCard::Ten;
 }
 
+int rnd(int i){ return std::rand() % i; }
+
 int main() {
         S_LOG("main");
 //        log(logxx::info) << "Testing card" << logxx::endl;
@@ -80,6 +82,8 @@ int main() {
 //        Deck deck;
 //        deck.Print(true);
 
+	std::srand(time(nullptr));
+
         PlayingCard target("Xч");
         Deck testDeck;
         Deck idealDeck;
@@ -121,7 +125,7 @@ int main() {
 //                }
 //                if (!std::next_permutation(deck.begin(), deck.end()))
 //                        break;
-                std::random_shuffle(deck.begin(), deck.end());
+                std::random_shuffle(deck.begin(), deck.end(), rnd);
         }
         log(logxx::info) << "Selected deck: " << logxx::endl;
         idealDeck.Print(true);
