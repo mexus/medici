@@ -64,9 +64,10 @@ std::vector<PlayingCard> Deck::GetDeck() const {
 }
 
 void Deck::Mix(std::vector<PlayingCard>& deck, const std::function<size_t(size_t)> &rnd) {
-        size_t second;
+        size_t first, second;
         do {
+                first = rnd(deck.size());
                 second = rnd(deck.size());
-        } while (second == 0);
-        std::swap(deck[0], deck[second]);
+        } while (second == first);
+        std::swap(deck[first], deck[second]);
 }
