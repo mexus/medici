@@ -14,7 +14,7 @@ public:
         static std::vector<PlayingCard> GenerateDeck();
         static std::vector<PlayingCard> FromString(const std::string&, const std::string& separator = std::string(" "));
         
-        std::vector<PlayingCard> GetDeck() const;
+        const std::vector<PlayingCard>& GetDeck() const;
         void SetDeck(const std::vector<PlayingCard> &deck);
         
         friend bool operator ==(const Deck& lhs, const Deck& rhs);

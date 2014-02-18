@@ -59,7 +59,7 @@ void Deck::SetDeck(const std::vector<PlayingCard>& deck) {
         this->deck = deck;
 }
 
-std::vector<PlayingCard> Deck::GetDeck() const {
+const std::vector<PlayingCard>& Deck::GetDeck() const {
         return deck;
 }
 
