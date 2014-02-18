@@ -4,6 +4,7 @@
 #include "../sources/logxx/logxx.h"
 #include "../sources/patience/medici.h"
 #include "../sources/dream_hacking/range_selectors/range_selector.h"
+#include "../sources/dream_hacking/calculator.h"
 
 static logxx::Log cLog("test");
 
@@ -356,6 +357,36 @@ inline bool ExampleConditions(const std::vector<PlayingCard> &deck, const Playin
                         return p.GetNumber() == PlayingCard::Ace;
                 }) == ownActionsEnd &&
                 deck[35].GetNumber() == PlayingCard::Ten;
+}
+
+bool TestCalculator(){
+        S_LOG("TestCalculator");
+        using namespace dream_hacking;
+        
+        ExistentialRangeSelector target(19, 24);
+        target.AddCard({PlayingCard::Ten, PlayingCard::Hearts});
+        
+        UniversalRangeSelector ownActions(3, 7);
+        ownActions.AddCard({PlayingCard::Ace, true});
+        
+        ExistentialRangeSelector firstCard(0, 0);
+        firstCard.AddCard({PlayingCard::Jack});
+        
+        ExistentialRangeSelector secondCard(1, 1);
+        secondCard.AddCard({PlayingCard::Nine});
+        
+        ExistentialRangeSelector thirdCard(2, 2);
+        thirdCard.AddCard({PlayingCard::Ace});
+        thirdCard.AddCard({PlayingCard::Ten});
+        
+        ComplexRangeSelector conditions;
+        conditions.AddRangeSelectors(target, ownActions, firstCard, secondCard, thirdCard);
+        
+        Calculator calc(conditions);
+        auto deck = calc.Calculate();
+        if (deck){
+//                log(logxx::info) << "Found"
+        }
 }
 
 #define RUN_TEST(function) \
