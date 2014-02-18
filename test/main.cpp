@@ -426,17 +426,17 @@ int main() {
         S_LOG("main");
         logxx::GlobalLogLevel(logxx::notice);
         randomSeed = time(nullptr);
-//        RUN_TEST(TestCard);
-//        RUN_TEST(TestStatisticsMixing);
-//        RUN_TEST(TestStatisticsReaching);
-//        TestMixPerformance();
-//        RUN_TEST(TestMedici);
-//        TestMediciCollapsePerformance();
-//        RUN_TEST(TestCardSelector);
-//        RUN_TEST(TestUniversalRangeSelector);
-//        RUN_TEST(TestExistentialRangeSelector);
-//        RUN_TEST(TestComplexRangeSelector);
-        logxx::GlobalLogLevel(logxx::debug);
+        RUN_TEST(TestCard);
+        RUN_TEST(TestStatisticsMixing);
+        RUN_TEST(TestStatisticsReaching);
+        TestMixPerformance();
+        RUN_TEST(TestMedici);
+        TestMediciCollapsePerformance();
+        RUN_TEST(TestCardSelector);
+        RUN_TEST(TestUniversalRangeSelector);
+        RUN_TEST(TestExistentialRangeSelector);
+        RUN_TEST(TestComplexRangeSelector);
+//        logxx::GlobalLogLevel(logxx::debug);
         RUN_TEST(TestCalculator);
 
 //	std::srand(time(nullptr));
