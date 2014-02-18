@@ -8,7 +8,8 @@
 
 static logxx::Log cLog("test");
 
-size_t rnd(size_t i){ return std::rand() % i; }
+unsigned int randomSeed;
+size_t rnd(size_t i){ return rand_r(&randomSeed) % i; }
 
 void PrintDeck(const std::vector<PlayingCard>& deck, std::ostream& s, bool abbrevations = true){
         S_LOG("PrintDeck");
@@ -385,7 +386,14 @@ bool TestCalculator(){
         Calculator calc(conditions);
         auto deck = calc.Calculate();
         if (deck){
-//                log(logxx::info) << "Found"
+                Medici result = *(deck.get());
+                auto &s = log(logxx::info) << "Found: \n";
+                PrintDeck(result, s);
+                s << logxx::endl;
+                return true;
+        } else {
+                log(logxx::error) << "Not found any combinations!" << logxx::endl;
+                return false;
         }
 }
 
@@ -396,7 +404,7 @@ if (!function()) \
 int main() {
         S_LOG("main");
         logxx::GlobalLogLevel(logxx::notice);
-        std::srand(time(nullptr));
+        randomSeed = time(nullptr);
         RUN_TEST(TestCard);
         RUN_TEST(TestStatisticsMixing);
         RUN_TEST(TestStatisticsReaching);
@@ -407,7 +415,7 @@ int main() {
         RUN_TEST(TestUniversalRangeSelector);
         RUN_TEST(TestExistentialRangeSelector);
         RUN_TEST(TestComplexRangeSelector);
-        
+        RUN_TEST(TestCalculator);
 
 //	std::srand(time(nullptr));
 //
