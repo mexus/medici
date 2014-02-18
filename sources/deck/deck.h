@@ -20,8 +20,11 @@ public:
         friend bool operator ==(const Deck& lhs, const Deck& rhs);
         friend bool operator < (const Deck& lhs, const Deck& rhs);
         
-        void Mix(const std::function<size_t(size_t)> &rnd);
-        static void Mix(std::vector<PlayingCard>& deck, const std::function<size_t(size_t)> &rnd);
+        template<class RandomFunction, class ...RFArguments>
+        void Mix(RandomFunction rnd, RFArguments... rndArgs);
+        
+        template<class RandomFunction, class ...RFArguments>
+        static void Mix(std::vector<PlayingCard>& deck, RandomFunction rnd, RFArguments... rndArgs);
         
 protected:
         std::vector<PlayingCard> deck;
@@ -30,6 +33,8 @@ protected:
 
 bool operator ==(const Deck& lhs, const Deck& rhs);
 bool operator < (const Deck& lhs, const Deck& rhs);
+
+#include "deck.tcc"
 
 #endif	/* DECK_H */
 
