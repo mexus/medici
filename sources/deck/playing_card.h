@@ -34,6 +34,7 @@ public:
         
         PlayingCard();
         PlayingCard(const std::string&);
+        PlayingCard(Number, Suit);
         virtual ~PlayingCard();
         
         Suit GetSuit() const;

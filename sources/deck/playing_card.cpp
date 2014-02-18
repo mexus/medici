@@ -67,6 +67,10 @@ PlayingCard::PlayingCard(const std::string& s) {
                 throw std::logic_error("Can't find a suit for a {" + tmp + "}");
 }
 
+PlayingCard::PlayingCard(Number n, Suit s) : number(n), suit(s) {
+
+}
+
 PlayingCard::~PlayingCard() {
 }
 
