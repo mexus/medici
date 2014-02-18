@@ -42,6 +42,9 @@ public:
         PlayingCard& Next(bool &reachedEnd);
         std::string Print(bool abbrevation = false) const;
         
+        static std::string PrintSuit(PlayingCard::Suit, bool abbrevation = false);
+        static std::string PrintNumber(PlayingCard::Number, bool abbrevation = false);
+        
         friend bool operator == (const PlayingCard& lhs, const PlayingCard& rhs);
         friend bool operator < (const PlayingCard& lhs, const PlayingCard& rhs);
 private:

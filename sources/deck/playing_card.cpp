@@ -94,10 +94,26 @@ std::string PlayingCard::Print(bool abbrevation) const {
                 return numbersNames.at(number) + " " + suitsNames.at(suit);
 
 }
+
+std::string PlayingCard::PrintNumber(PlayingCard::Number n, bool abbrevation) {
+        if (abbrevation)
+                return numbersNamesAbbrevations.at(n);
+        else
+                return numbersNames.at(n);
+}
+
+std::string PlayingCard::PrintSuit(PlayingCard::Suit s, bool abbrevation) {
+        if (abbrevation)
+                return suitsNamesAbbrevations.at(s);
+        else
+                return suitsNames.at(s);
+}
+
 bool operator == (const PlayingCard& lhs, const PlayingCard& rhs){
         return lhs.number == rhs.number && lhs.suit == rhs.suit;
 
 }
+
 bool operator < (const PlayingCard& lhs, const PlayingCard& rhs){
         if (lhs.suit == rhs.suit){
                 return lhs.number < rhs.number;
