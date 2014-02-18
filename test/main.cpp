@@ -364,8 +364,10 @@ bool TestCalculator(){
         S_LOG("TestCalculator");
         using namespace dream_hacking;
         
+        PlayingCard targetCard{PlayingCard::Ten, PlayingCard::Hearts};
+        
         ExistentialRangeSelector target(19, 24);
-        target.AddCard({PlayingCard::Ten, PlayingCard::Hearts});
+        target.AddCard(targetCard);
         
         UniversalRangeSelector ownActions(3, 7);
         ownActions.AddCard({PlayingCard::Ace, true});
@@ -390,11 +392,30 @@ bool TestCalculator(){
                 auto &s = log(logxx::info) << "Found: \n";
                 PrintDeck(result, s);
                 s << logxx::endl;
-                return true;
         } else {
                 log(logxx::error) << "Not found any combinations!" << logxx::endl;
                 return false;
         }
+        
+        deck = calc.Calculate(15, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
+                return d->GetCollapses(targetCard);
+        });
+        if (deck){
+                Medici result = *(deck.get());
+                auto &s = log(logxx::info) << "Found: \n";
+                PrintDeck(result, s);
+                auto val = result.GetCollapses(targetCard);
+                s << "\nValue: " << val << logxx::endl;
+                if (val < 1){
+                        log(logxx::error) << "Not found any positive-valued sequence" << logxx::endl;
+                        return false;
+                }
+        } else {
+                log(logxx::error) << "Not found any combinations!" << logxx::endl;
+                return false;
+        }
+        
+        return true;
 }
 
 #define RUN_TEST(function) \
@@ -405,16 +426,17 @@ int main() {
         S_LOG("main");
         logxx::GlobalLogLevel(logxx::notice);
         randomSeed = time(nullptr);
-        RUN_TEST(TestCard);
-        RUN_TEST(TestStatisticsMixing);
-        RUN_TEST(TestStatisticsReaching);
-        TestMixPerformance();
-        RUN_TEST(TestMedici);
-        TestMediciCollapsePerformance();
-        RUN_TEST(TestCardSelector);
-        RUN_TEST(TestUniversalRangeSelector);
-        RUN_TEST(TestExistentialRangeSelector);
-        RUN_TEST(TestComplexRangeSelector);
+//        RUN_TEST(TestCard);
+//        RUN_TEST(TestStatisticsMixing);
+//        RUN_TEST(TestStatisticsReaching);
+//        TestMixPerformance();
+//        RUN_TEST(TestMedici);
+//        TestMediciCollapsePerformance();
+//        RUN_TEST(TestCardSelector);
+//        RUN_TEST(TestUniversalRangeSelector);
+//        RUN_TEST(TestExistentialRangeSelector);
+//        RUN_TEST(TestComplexRangeSelector);
+        logxx::GlobalLogLevel(logxx::debug);
         RUN_TEST(TestCalculator);
 
 //	std::srand(time(nullptr));

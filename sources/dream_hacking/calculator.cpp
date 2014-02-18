@@ -2,8 +2,10 @@
 #include <cstdlib>
 
 namespace dream_hacking {
+        
+        logxx::Log Calculator::cLog("Calculator");
 
-        Calculator::Calculator(const ComplexRangeSelector& selector, time_t timeLimit) : selector(selector), timeLimit(timeLimit) {
+        Calculator::Calculator(const ComplexRangeSelector& selector) : selector(selector) {
         }
 
         Calculator::~Calculator() {
@@ -13,26 +15,51 @@ namespace dream_hacking {
                 return selector;
         }
 
-        std::shared_ptr<Medici> Calculator::Calculate() {
+        void Calculator::PrintDeck(const std::shared_ptr<Medici>& deck, std::ostream& s) {
+                if (s.good()){
+                        auto cardsDeck = deck->GetDeck();
+                        for (auto it = cardsDeck.begin(); it != cardsDeck.end(); ++it){
+                                const PlayingCard& card = *it;
+                                s << card.Print(true);
+                                if (it +1 != cardsDeck.end())
+                                        s << ", ";
+                        }
+                }
+        }
+
+        std::shared_ptr<Medici> Calculator::Calculate(time_t timeLimit,
+                        const std::function<unsigned int (const std::shared_ptr<Medici>&)> & maximizationFunction)
+        {
+                S_LOG("Calculate");
                 time_t start(time(nullptr));
                 unsigned int seed = start;
                 
-                auto deck = std::make_shared<Medici>();
-                deck->SetDeck(Deck::GenerateDeck());
-                bool found(false);
+                unsigned int maximumValue = 0;
+                auto testingDeck = std::make_shared<Medici>();
+                std::shared_ptr<Medici> idealDeck;
+                testingDeck->SetDeck(Deck::GenerateDeck());
                 while (time(nullptr) < start + timeLimit){
-                        if (selector.Test(deck->GetDeck())){
-                                if (deck->Collapse()){
-                                        found = true;
-                                        break;
+                        if (selector.Test(testingDeck->GetDeck())){
+                                if (testingDeck->Collapse()){
+                                        if (maximizationFunction){
+                                                unsigned int value = maximizationFunction(testingDeck);
+                                                if (!idealDeck || value > maximumValue){
+                                                        maximumValue = value;
+                                                        idealDeck.reset(new Medici(* testingDeck.get()));
+                                                        
+                                                        auto &s = log(logxx::debug) << "Found deck \n";
+                                                        PrintDeck(testingDeck, s);
+                                                        s << "\nValue = " << value << logxx::endl;;
+                                                }
+                                        } else {
+                                                idealDeck = testingDeck;
+                                                break;
+                                        }
                                 }
                         }
-                        deck->Mix(Calculator::rnd, &seed);
+                        testingDeck->Mix(Calculator::rnd, &seed);
                 }
-                if (found)
-                        return deck;
-                else
-                        return nullptr;
+                return idealDeck;
         }
 
         size_t Calculator::rnd(size_t i, unsigned int* seed) {
