@@ -1,4 +1,5 @@
 #include "calculator.h"
+#include <cstdlib>
 
 namespace dream_hacking {
 
@@ -13,8 +14,9 @@ namespace dream_hacking {
         }
 
         std::shared_ptr<Medici> Calculator::Calculate() {
-                srand(time(nullptr));
                 time_t start(time(nullptr));
+                unsigned int seed = start;
+                
                 auto deck = std::make_shared<Medici>();
                 deck->SetDeck(Deck::GenerateDeck());
                 bool found(false);
@@ -25,7 +27,7 @@ namespace dream_hacking {
                                         break;
                                 }
                         }
-                        deck->Mix(Calculator::rnd);
+                        deck->Mix(Calculator::rnd, &seed);
                 }
                 if (found)
                         return deck;
@@ -33,8 +35,8 @@ namespace dream_hacking {
                         return nullptr;
         }
 
-        size_t Calculator::rnd(size_t i) {
-                return std::rand() % i;
+        size_t Calculator::rnd(size_t i, unsigned int* seed) {
+                return rand_r(seed) % i;
         }
 
 } // namespace dream_hacking

@@ -15,7 +15,7 @@ namespace dream_hacking {
                 ComplexRangeSelector& AccessConditions();
                 
         protected:
-                static size_t rnd(size_t);
+                static size_t rnd(size_t, unsigned int* seed);
                 
         private:
                 ComplexRangeSelector selector;
