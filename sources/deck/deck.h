@@ -20,6 +20,7 @@ public:
         friend bool operator ==(const Deck& lhs, const Deck& rhs);
         friend bool operator < (const Deck& lhs, const Deck& rhs);
         
+        void Mix(const std::function<size_t(size_t)> &rnd);
         static void Mix(std::vector<PlayingCard>& deck, const std::function<size_t(size_t)> &rnd);
         
 protected:

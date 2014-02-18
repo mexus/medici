@@ -71,3 +71,7 @@ void Deck::Mix(std::vector<PlayingCard>& deck, const std::function<size_t(size_t
         } while (second == first);
         std::swap(deck[first], deck[second]);
 }
+
+void Deck::Mix(const std::function<size_t(size_t)>& rnd) {
+        Mix(deck, rnd);
+}
