@@ -3,4 +3,4 @@ project(approxx)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Werror -Wall -Wextra ")
 
 add_subdirectory(test)
-
+add_subdirectory(sources)
