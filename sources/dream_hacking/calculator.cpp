@@ -13,8 +13,9 @@ namespace dream_hacking {
         }
 
         std::shared_ptr<Medici> Calculator::Calculate() {
+                srand(time(nullptr));
                 time_t start(time(nullptr));
-                std::shared_ptr<Medici> deck;
+                auto deck = std::make_shared<Medici>();
                 deck->SetDeck(Deck::GenerateDeck());
                 bool found(false);
                 while (time(nullptr) < start + timeLimit){
