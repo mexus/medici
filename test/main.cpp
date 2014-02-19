@@ -485,7 +485,7 @@ void TestMultithreadPerformance(){
                         std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
 
-                log(logxx::debug) << "All thread created, waiting for a second" << logxx::endl;
+                log(logxx::debug) << "All threads created, waiting for a second" << logxx::endl;
                 ready = 0;
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 
