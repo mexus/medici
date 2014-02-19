@@ -20,7 +20,7 @@ namespace dream_hacking {
                         AddRangeSelectors(args...);
                 }
 
-                bool Test(const std::vector<PlayingCard> &);
+                bool Test(const std::vector<PlayingCard> &) const;
         protected:
                 typedef std::shared_ptr<RangeSelector> PRangeSelector;
                 std::vector<PRangeSelector> selectors;

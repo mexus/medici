@@ -8,7 +8,8 @@ namespace dream_hacking {
         ComplexRangeSelector::~ComplexRangeSelector() {
         }
 
-        bool ComplexRangeSelector::Test(const std::vector<PlayingCard>& deck) {auto localSelectors = selectors;
+        bool ComplexRangeSelector::Test(const std::vector<PlayingCard>& deck) const{
+                auto localSelectors = selectors;
                 
                 size_t len = deck.size();
                 for (size_t i = start; i < len; ++i){
