@@ -1,6 +1,10 @@
 #include <algorithm>
 #include <limits>
 
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
 #include "../sources/logxx/logxx.h"
 #include "../sources/patience/medici.h"
 #include "../sources/dream_hacking/range_selectors/range_selector.h"
@@ -418,6 +422,96 @@ bool TestCalculator(){
         return true;
 }
 
+size_t rnd(size_t i, unsigned int *seed){
+        return rand_r(seed) % i;
+}
+
+void TestMultithreadPerformance(){
+        S_LOG("TestMultithreadPerformance");
+        
+        for (size_t threadsCount = 1; threadsCount <= 5; ++threadsCount){
+                size_t ready(0);
+                std::mutex mCreate, mStart, mDone;
+                std::condition_variable cvCreate, cvStart, cvDone;
+
+                static const size_t count = 1E6;
+
+                std::vector<std::thread> threads;
+                threads.reserve(threadsCount);
+                for (size_t i = 0; i < threadsCount; ++i){
+                        threads.emplace_back([&mCreate, &cvCreate, &ready, &mStart, &cvStart, &mDone, &cvDone, i](){
+                                {
+                                        std::lock_guard<std::mutex> lg(mCreate);
+                                        ready += 1;
+                                }
+//                                std::vector<PlayingCard> cardsDeck = Deck::GenerateDeck();
+                                Medici deck;
+                                deck.SetDeck(Deck::GenerateDeck());
+                                unsigned int rndSeed = i * 10;
+                                log(logxx::debug, i) << "Thread started" << logxx::endl;
+                                cvCreate.notify_all();
+                                {
+                                        std::unique_lock<std::mutex> lk(mStart);
+                                        cvStart.wait(lk);
+                                }
+                                log(logxx::debug, i) << "Execution begin" << logxx::endl;
+
+                                for (size_t i = 0; i < count; ++i){
+                                        deck.Mix([&rndSeed](size_t i)->size_t{
+                                                return rand_r(&rndSeed) % i;
+                                        });
+                                        deck.Collapse();
+//                                        Deck::Mix(cardsDeck, [&rndSeed](size_t i)->size_t{
+//                                                return rand_r(&rndSeed) % i;
+//                                        });
+                                }
+
+                                log(logxx::debug, i) << "Execution done" << logxx::endl;
+                                {
+                                        std::lock_guard<std::mutex> lg(mDone);
+                                        ready += 1;
+                                }
+                                cvDone.notify_all();
+                        });
+                }
+
+                {
+                        std::unique_lock<std::mutex> lk(mCreate);
+                        cvCreate.wait(lk, [&ready, &threadsCount]()->bool{return ready == threadsCount;});
+                        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                }
+
+                log(logxx::debug) << "All thread created, waiting for a second" << logxx::endl;
+                ready = 0;
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+
+                cvStart.notify_all();
+                {
+                        using namespace std::chrono;
+                        steady_clock::time_point start = steady_clock::now();
+                        std::unique_lock<std::mutex> lk(mDone);
+                        cvDone.wait(lk, [&ready, &threadsCount]()->bool{return ready == threadsCount;});
+                        steady_clock::time_point end = steady_clock::now();
+                        double duration = duration_cast<seconds>(end - start).count();
+                        int performance = static_cast<double>(count * threadsCount) / duration;
+                        log(logxx::info, threadsCount) << "Average performance: " <<
+                                performance << 
+                                " collapse attempts per second" << logxx::endl;
+                }
+
+                for (size_t i = 0; i < threadsCount; ++i){
+                        std::thread &thread = threads[i];
+                        thread.join();
+                }
+        }
+}
+
+bool TestMultithreadStatistics(){
+        S_LOG("TestMultithreadStatistics");
+        
+        return true;
+}
+
 #define RUN_TEST(function) \
 if (!function()) \
         log(logxx::warning, #function) << "TEST FAILED" << logxx::endl;
@@ -425,19 +519,20 @@ if (!function()) \
 int main() {
         S_LOG("main");
         logxx::GlobalLogLevel(logxx::notice);
-        randomSeed = time(nullptr);
-        RUN_TEST(TestCard);
-        RUN_TEST(TestStatisticsMixing);
-        RUN_TEST(TestStatisticsReaching);
-        TestMixPerformance();
-        RUN_TEST(TestMedici);
-        TestMediciCollapsePerformance();
-        RUN_TEST(TestCardSelector);
-        RUN_TEST(TestUniversalRangeSelector);
-        RUN_TEST(TestExistentialRangeSelector);
-        RUN_TEST(TestComplexRangeSelector);
+//        randomSeed = time(nullptr);
+//        RUN_TEST(TestCard);
+//        RUN_TEST(TestStatisticsMixing);
+//        RUN_TEST(TestStatisticsReaching);
+//        TestMixPerformance();
+//        RUN_TEST(TestMedici);
+//        TestMediciCollapsePerformance();
+//        RUN_TEST(TestCardSelector);
+//        RUN_TEST(TestUniversalRangeSelector);
+//        RUN_TEST(TestExistentialRangeSelector);
+//        RUN_TEST(TestComplexRangeSelector);
+//        RUN_TEST(TestCalculator);
 //        logxx::GlobalLogLevel(logxx::debug);
-        RUN_TEST(TestCalculator);
+        TestMultithreadPerformance();
 
 //	std::srand(time(nullptr));
 //

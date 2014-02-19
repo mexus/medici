@@ -1,6 +1,8 @@
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Og")
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
 
+find_package (Threads)
+
 add_executable(medichi-test
         main.cpp
 
@@ -20,3 +22,5 @@ add_executable(medichi-test
 
 	../sources/logxx/logxx.cpp
 )
+
+target_link_libraries (medichi-test ${CMAKE_THREAD_LIBS_INIT})
