@@ -1,5 +1,7 @@
 #include "calculator.h"
 #include <cstdlib>
+#include <atomic>
+#include <thread>
 
 namespace dream_hacking {
         
@@ -27,43 +29,84 @@ namespace dream_hacking {
                 }
         }
 
+        void Calculator::SetThreads(size_t n) {
+                threadsCount = n;
+        }
+
         std::shared_ptr<Medici> Calculator::Calculate(time_t timeLimit,
                         const std::function<unsigned int (const std::shared_ptr<Medici>&)> & maximizationFunction)
         {
                 S_LOG("Calculate");
-                time_t start(time(nullptr));
-                unsigned int seed = start;
                 
+                std::mutex mCommonVars;
                 unsigned int maximumValue = 0;
-                auto testingDeck = std::make_shared<Medici>();
+                unsigned long long int variantsChecked(0);
                 std::shared_ptr<Medici> idealDeck;
-                testingDeck->SetDeck(Deck::GenerateDeck());
-                while (time(nullptr) < start + timeLimit){
-                        if (selector.Test(testingDeck->GetDeck())){
-                                if (testingDeck->Collapse()){
-                                        if (maximizationFunction){
-                                                unsigned int value = maximizationFunction(testingDeck);
-                                                if (!idealDeck || value > maximumValue){
-                                                        maximumValue = value;
-                                                        idealDeck.reset(new Medici(* testingDeck.get()));
-                                                        
-                                                        auto &s = log(logxx::debug) << "Found deck \n";
-                                                        PrintDeck(testingDeck, s);
-                                                        s << "\nValue = " << value << logxx::endl;;
+                std::atomic_bool interrupt(false);
+                
+                std::vector<std::thread> threads;
+                
+                using namespace std::chrono;
+                steady_clock::time_point start = steady_clock::now();
+                
+                for (size_t i = 0; i < threadsCount; ++i){
+                        threads.emplace_back([this, &maximizationFunction, &mCommonVars, &maximumValue, &idealDeck, &interrupt,
+                                &variantsChecked, i, timeLimit]()
+                        {
+                                time_t start(time(nullptr));
+                                unsigned int seed = start - i * 10;
+                                
+                                auto testingDeck = std::make_shared<Medici>();
+                                testingDeck->SetDeck(Deck::GenerateDeck());
+                                unsigned long long int localVariantsChecked(0);
+                                while (!interrupt && time(nullptr) < start + timeLimit){
+                                        ++localVariantsChecked;
+                                        if (selector.Test(testingDeck->GetDeck())){
+                                                if (testingDeck->Collapse()){
+                                                        if (maximizationFunction){
+                                                                unsigned int value = maximizationFunction(testingDeck);
+                                                                std::lock_guard<std::mutex> lk(mCommonVars);
+                                                                if (value > maximumValue){
+                                                                        maximumValue = value;
+                                                                        idealDeck.reset(new Medici(* testingDeck.get()));
+
+                                                                        auto &s = log(logxx::debug) << "Found deck \n";
+                                                                        PrintDeck(testingDeck, s);
+                                                                        s << "\nValue = " << value << logxx::endl;
+                                                                }
+                                                        } else {
+                                                                idealDeck = testingDeck;
+                                                                interrupt = true;
+                                                                break;
+                                                        }
                                                 }
-                                        } else {
-                                                idealDeck = testingDeck;
-                                                break;
                                         }
+                                        testingDeck->Mix(Calculator::rnd, &seed);
                                 }
-                        }
-                        testingDeck->Mix(Calculator::rnd, &seed);
+                                std::lock_guard<std::mutex> lk(mCommonVars);
+                                variantsChecked += localVariantsChecked;
+                        });
                 }
+                
+                for (size_t i = 0; i < threadsCount; ++i){
+                        std::thread& thread = threads[i];
+                        thread.join();
+                }
+                
+                steady_clock::time_point end = steady_clock::now();
+                double duration = duration_cast<milliseconds>(end - start).count() * 1E-3;
+                lastPerformance = static_cast<double>(variantsChecked) / duration;
+                log(logxx::notice) << "Total " << variantsChecked << " decks checked in " << duration << "s" << logxx::endl;
+                
                 return idealDeck;
         }
 
         size_t Calculator::rnd(size_t i, unsigned int* seed) {
                 return rand_r(seed) % i;
+        }
+
+        double Calculator::GetLastPerformance() const {
+                return lastPerformance;
         }
 
 } // namespace dream_hacking

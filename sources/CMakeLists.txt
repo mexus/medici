@@ -19,3 +19,5 @@ add_executable(medichi
 
 	logxx/logxx.cpp
 )
+
+target_link_libraries (medichi ${CMAKE_THREAD_LIBS_INIT})

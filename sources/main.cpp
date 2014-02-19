@@ -58,9 +58,14 @@ int main(int argc, char** argv) {
         if (argc > 1)
                 timeLimit = std::atoi(argv[1]);
         
+        if (argc > 2)
+                calc.SetThreads(std::atoi(argv[2]));
+        
         auto deck = calc.Calculate(timeLimit, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
                 return d->GetCollapses(targetCard);
         });
+        
+        log(logxx::info) << "Performance: " << (unsigned long long int)calc.GetLastPerformance() << " decks per second" << logxx::endl;
         
         if (!deck){
                 log(logxx::error) << "No sequences found" << logxx::endl;

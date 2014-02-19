@@ -11,11 +11,18 @@ namespace dream_hacking {
                 Calculator(const ComplexRangeSelector& conditions);
                 virtual ~Calculator();
                 
-                std::shared_ptr<Medici> Calculate(time_t timeLimit = 10, const std::function<unsigned int (const std::shared_ptr<Medici>&)> & maximizationFunction = nullptr);
+                void SetThreads(size_t);
+                
+                std::shared_ptr<Medici> Calculate(time_t timeLimit = 10,
+                        const std::function<unsigned int (const std::shared_ptr<Medici>&)> & maximizationFunction = nullptr);
                 ComplexRangeSelector& AccessConditions();
+                
+                double GetLastPerformance() const;
         protected:
                 static size_t rnd(size_t, unsigned int* seed);
                 static logxx::Log cLog;
+                size_t threadsCount = 1;
+                double lastPerformance = 0.0;
                 
         private:
                 ComplexRangeSelector selector;
