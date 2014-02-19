@@ -429,6 +429,8 @@ size_t rnd(size_t i, unsigned int *seed){
 void TestMultithreadPerformance(){
         S_LOG("TestMultithreadPerformance");
         
+        unsigned int maxPerformance(0);
+        
         for (size_t threadsCount = 1; threadsCount <= 5; ++threadsCount){
                 size_t ready(0);
                 std::mutex mCreate, mStart, mDone;
@@ -484,6 +486,8 @@ void TestMultithreadPerformance(){
                 log(logxx::debug) << "All thread created, waiting for a second" << logxx::endl;
                 ready = 0;
                 std::this_thread::sleep_for(std::chrono::seconds(1));
+                
+                unsigned int performance(0);
 
                 cvStart.notify_all();
                 {
@@ -493,7 +497,7 @@ void TestMultithreadPerformance(){
                         cvDone.wait(lk, [&ready, &threadsCount]()->bool{return ready == threadsCount;});
                         steady_clock::time_point end = steady_clock::now();
                         double duration = duration_cast<seconds>(end - start).count();
-                        int performance = static_cast<double>(count * threadsCount) / duration;
+                        performance = static_cast<double>(count * threadsCount) / duration;
                         log(logxx::info, threadsCount) << "Average performance: " <<
                                 performance << 
                                 " collapse attempts per second" << logxx::endl;
@@ -502,6 +506,13 @@ void TestMultithreadPerformance(){
                 for (size_t i = 0; i < threadsCount; ++i){
                         std::thread &thread = threads[i];
                         thread.join();
+                }
+                
+                if (performance > maxPerformance){
+                        maxPerformance = performance;
+                } else {
+                        log(logxx::info) << "Max performance reached at threads = " << threadsCount - 1 << logxx::endl;
+                        break ;
                 }
         }
 }
