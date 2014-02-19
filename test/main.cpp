@@ -61,6 +61,7 @@ bool TestStatisticsMixing(){
         double maxDuplicates = 0.5; // in percents
         std::vector< std::vector<PlayingCard> > decks;
         static const unsigned long sequencesCount = 1E6;
+        decks.reserve(sequencesCount);
         log(logxx::info) << "Generating " << sequencesCount << " decks" << logxx::endl;
         auto testDeck = Deck::GenerateDeck();
         decks.push_back(testDeck);
@@ -446,7 +447,6 @@ void TestMultithreadPerformance(){
                                         std::lock_guard<std::mutex> lg(mCreate);
                                         ready += 1;
                                 }
-//                                std::vector<PlayingCard> cardsDeck = Deck::GenerateDeck();
                                 Medici deck;
                                 deck.SetDeck(Deck::GenerateDeck());
                                 unsigned int rndSeed = i * 10;
@@ -463,9 +463,6 @@ void TestMultithreadPerformance(){
                                                 return rand_r(&rndSeed) % i;
                                         });
                                         deck.Collapse();
-//                                        Deck::Mix(cardsDeck, [&rndSeed](size_t i)->size_t{
-//                                                return rand_r(&rndSeed) % i;
-//                                        });
                                 }
 
                                 log(logxx::debug, i) << "Execution done" << logxx::endl;
@@ -520,7 +517,63 @@ void TestMultithreadPerformance(){
 bool TestMultithreadStatistics(){
         S_LOG("TestMultithreadStatistics");
         
-        return true;
+        static const double maxDuplicates = 0.5; // in percents
+        
+        size_t threadsCount = 1;
+        for (; threadsCount <= 5; ++threadsCount){
+                static const size_t count = 1E5;
+
+                std::mutex mDecks;
+                std::vector< std::vector<PlayingCard> > decks;
+                decks.reserve(count * threadsCount);
+                
+                std::vector<std::thread> threads;
+                threads.reserve(threadsCount);
+                for (size_t i = 0; i < threadsCount; ++i){
+                        threads.emplace_back([&decks, &mDecks, i](){
+                                std::vector< std::vector<PlayingCard> > localDecks;
+                                localDecks.reserve(count);
+                                std::vector<PlayingCard> cardsDeck = Deck::GenerateDeck();
+                                unsigned int rndSeed = i * 10;
+
+                                localDecks.push_back(cardsDeck);
+                                for (size_t i = 0; i < count; ++i){
+                                        Deck::Mix(cardsDeck, [&rndSeed](size_t i)->size_t{
+                                                return rand_r(&rndSeed) % i;
+                                        });
+                                        localDecks.push_back(cardsDeck);
+                                }
+                                
+                                std::lock_guard<std::mutex> lg(mDecks);
+                                decks.insert(decks.end(), localDecks.begin(), localDecks.end());
+                        });
+                }
+
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+
+                for (size_t i = 0; i < threadsCount; ++i){
+                        std::thread &thread = threads[i];
+                        thread.join();
+                }
+                
+                std::sort(decks.begin(), decks.end());
+                unsigned long duplicates(0);
+                auto start = decks.begin();
+                while ((start = std::adjacent_find(start, decks.end())) != decks.end()){
+                        ++duplicates;
+                        ++start;
+                }
+                
+                double duplicatesPercent = Percent(duplicates, count * threadsCount);
+                log(logxx::info, threadsCount) << "Found " << duplicates << " duplicates (" << duplicatesPercent << "%)" << logxx::endl;                
+                
+                if (duplicatesPercent > maxDuplicates){
+                        log(logxx::error) << "Too many duplicates" << logxx::endl;
+                        break;
+                }
+                
+        }
+        return threadsCount > 1;
 }
 
 #define RUN_TEST(function) \
@@ -543,7 +596,8 @@ int main() {
 //        RUN_TEST(TestComplexRangeSelector);
 //        RUN_TEST(TestCalculator);
 //        logxx::GlobalLogLevel(logxx::debug);
-        TestMultithreadPerformance();
+//        TestMultithreadPerformance();
+        RUN_TEST(TestMultithreadStatistics);
 
 //	std::srand(time(nullptr));
 //
