@@ -620,74 +620,22 @@ if (!function()) \
 int main() {
         S_LOG("main");
         logxx::GlobalLogLevel(logxx::notice);
-//        randomSeed = time(nullptr);
-//        RUN_TEST(TestCard);
-//        RUN_TEST(TestStatisticsMixing);
-//        RUN_TEST(TestStatisticsReaching);
-//        TestMixPerformance();
-//        RUN_TEST(TestMedici);
-//        TestMediciCollapsePerformance();
-//        RUN_TEST(TestCardSelector);
-//        RUN_TEST(TestUniversalRangeSelector);
-//        RUN_TEST(TestExistentialRangeSelector);
-//        RUN_TEST(TestComplexRangeSelector);
-//        RUN_TEST(TestCalculator);
-//        logxx::GlobalLogLevel(logxx::debug);
-//        TestMultithreadPerformance();
-//        RUN_TEST(TestMultithreadStatistics);
+        randomSeed = time(nullptr);
+        RUN_TEST(TestCard);
+        RUN_TEST(TestStatisticsMixing);
+        RUN_TEST(TestStatisticsReaching);
+        TestMixPerformance();
+        RUN_TEST(TestMedici);
+        TestMediciCollapsePerformance();
+        RUN_TEST(TestCardSelector);
+        RUN_TEST(TestUniversalRangeSelector);
+        RUN_TEST(TestExistentialRangeSelector);
+        RUN_TEST(TestComplexRangeSelector);
+        RUN_TEST(TestCalculator);
+        logxx::GlobalLogLevel(logxx::debug);
+        TestMultithreadPerformance();
+        RUN_TEST(TestMultithreadStatistics);
         RUN_TEST(TestMultiThreadCalculator);
-
-//	std::srand(time(nullptr));
-//
-//        PlayingCard target("Xч");
-//        Medici testDeck;
-//        Medici idealDeck;
-//        std::vector<PlayingCard> deck = Deck::GenerateDeck();
-////        unsigned int maxCollapses(0);
-//        long int collapsed(0), conditionsMet(0);
-//        for (long long int i = 0; i < std::numeric_limits<decltype(i)>::max(); ++i){
-////                if (Conditions(deck, target)){
-////                        testDeck.SetDeck(deck);
-////                        if (testDeck.Collapse()){
-////                                auto targetCollapses = testDeck.GetCollapses(target);
-////                                if (targetCollapses > maxCollapses){
-////                                        maxCollapses = targetCollapses;
-////                                        PrintDeck(testDeck);
-////                                        log(logxx::info) << target.Print() << " collapses: " << targetCollapses << logxx::endl;
-////                                        idealDeck = testDeck;
-////                                }
-////                        }
-////                } else {
-//		if (Conditions(deck, target)){
-//			++conditionsMet;
-//                	testDeck.SetDeck(deck);
-//	                if (testDeck.Collapse())
-//	                        ++collapsed;
-//		}
-//                
-//                        static time_t start(time(nullptr));
-//                        time_t now(time(nullptr));
-//                        static const time_t maxExecutionTime = 60;
-//                        if (now > start + maxExecutionTime){
-//                                log(logxx::info) << "Combinations: " << i << logxx::endl;
-//                                break;
-//                        }
-////                }
-//                //std::random_shuffle(deck.begin(), deck.end(), rnd);
-//                Deck::Mix(deck, rnd);
-//        }
-//        log(logxx::info) << "Collapsed: " << collapsed << logxx::endl;
-//        log(logxx::info) << "Conditions met: " << conditionsMet << logxx::endl;
-        
-//        log(logxx::info) << "Selected deck: " << logxx::endl;
-//        PrintDeck(idealDeck);
-//        log(logxx::info) << "Collapses: " << logxx::endl;
-//        for (auto &pair : idealDeck.GetCollapses()){
-//                log(logxx::info) << pair.first.Print() << ": " << pair.second << logxx::endl;
-//        }
-        
-        
-        
         
         return 0;
 }
