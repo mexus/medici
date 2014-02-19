@@ -365,8 +365,8 @@ inline bool ExampleConditions(const std::vector<PlayingCard> &deck, const Playin
                 deck[35].GetNumber() == PlayingCard::Ten;
 }
 
-bool TestCalculator(){
-        S_LOG("TestCalculator");
+bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculator", double *performance = nullptr){
+        D_LOG(label);
         using namespace dream_hacking;
         
         PlayingCard targetCard{PlayingCard::Ten, PlayingCard::Hearts};
@@ -391,6 +391,8 @@ bool TestCalculator(){
         conditions.AddRangeSelectors(target, ownActions, firstCard, secondCard, thirdCard);
         
         Calculator calc(conditions);
+        calc.SetThreads(threads);
+        
         auto deck = calc.Calculate();
         if (deck){
                 Medici result = *(deck.get());
@@ -405,6 +407,9 @@ bool TestCalculator(){
         deck = calc.Calculate(15, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
                 return d->GetCollapses(targetCard);
         });
+        if (performance)
+                *performance = calc.GetLastPerformance();
+        
         if (deck){
                 Medici result = *(deck.get());
                 auto &s = log(logxx::info) << "Found: \n";
@@ -493,7 +498,7 @@ void TestMultithreadPerformance(){
                         std::unique_lock<std::mutex> lk(mDone);
                         cvDone.wait(lk, [&ready, &threadsCount]()->bool{return ready == threadsCount;});
                         steady_clock::time_point end = steady_clock::now();
-                        double duration = duration_cast<seconds>(end - start).count();
+                        double duration = duration_cast<milliseconds>(end - start).count() * 1E-3;
                         performance = static_cast<double>(count * threadsCount) / duration;
                         log(logxx::info, threadsCount) << "Average performance: " <<
                                 performance << 
@@ -576,6 +581,38 @@ bool TestMultithreadStatistics(){
         return threadsCount > 1;
 }
 
+bool TestMultiThreadCalculator(){
+        size_t maxThreads = 6;
+        bool res = true;
+        
+        double maxPerf(0.0);
+        size_t optimalThreads(0);
+        
+        S_LOG("TestMultiThreadCalculator");
+        auto storedLevel = logxx::GlobalLogLevel();
+        logxx::GlobalLogLevel(logxx::warning);
+        
+        for (size_t threads = 1; threads <= maxThreads; ++threads){
+                double perf(0.0);
+                if (TestCalculator(threads, "TestMultiThreadCalculator", &perf)){
+                        log(logxx::info, threads) << (long long int)perf << " decks per second" << logxx::endl;
+                        if (perf > maxPerf){
+                                maxPerf = perf;
+                                optimalThreads = threads;
+                        }
+                } else {
+                        log(logxx::error) << "TestCalculator has failed" << logxx::endl;
+                        res = false;
+                        break;
+                }
+        }
+        
+        log(logxx::info) << "Max performance: " << (int)maxPerf << " decks per second, at threads = " << optimalThreads << logxx::endl;
+        
+        logxx::GlobalLogLevel(storedLevel);
+        return res;
+}
+
 #define RUN_TEST(function) \
 if (!function()) \
         log(logxx::warning, #function) << "TEST FAILED" << logxx::endl;
@@ -597,7 +634,8 @@ int main() {
 //        RUN_TEST(TestCalculator);
 //        logxx::GlobalLogLevel(logxx::debug);
 //        TestMultithreadPerformance();
-        RUN_TEST(TestMultithreadStatistics);
+//        RUN_TEST(TestMultithreadStatistics);
+        RUN_TEST(TestMultiThreadCalculator);
 
 //	std::srand(time(nullptr));
 //

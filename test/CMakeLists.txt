@@ -1,8 +1,6 @@
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Og")
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
 
-find_package (Threads)
-
 add_executable(medichi-test
         main.cpp
 
