@@ -9,7 +9,9 @@ public:
         Medici();
         virtual ~Medici();
 
+
         virtual bool Collapse();
+        bool Collapse(bool calculateMobilesAndStationars);
         std::map<PlayingCard, unsigned int> GetCollapses() const;
         unsigned int GetCollapses(const PlayingCard&) const;
         
@@ -23,7 +25,7 @@ private:
         bool collapsed = false;
         
         static bool CollapsingCondition(const std::vector<PlayingCard> &);
-        void PartialCollapse(std::vector<PlayingCard> &);
+        void PartialCollapse(std::vector<PlayingCard> &, bool calculateMobilesAndStationars);
         
 protected:
         static logxx::Log cLog;

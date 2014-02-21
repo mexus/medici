@@ -21,7 +21,7 @@ bool Medici::CollapsingCondition(const std::vector<PlayingCard> &d){
         return d.size() == 2;
 }
 
-void Medici::PartialCollapse(std::vector<PlayingCard> &d){
+void Medici::PartialCollapse(std::vector<PlayingCard> &d, bool calculateMobilesAndStationars){
         S_LOG("PartialCollapse");
         //deck numeration:
         //one, two, ..., left, middle, right
@@ -41,9 +41,11 @@ void Medici::PartialCollapse(std::vector<PlayingCard> &d){
 
                         if (right.GetNumber() == left.GetNumber() ||
                                 right.GetSuit() == left.GetSuit()){
-                                mobiles.insert(middle);
-                                if (mobiles.find(left) == mobiles.end())
-                                        stationars.insert(left);
+                                if (calculateMobilesAndStationars){
+                                        mobiles.insert(middle);
+                                        if (mobiles.find(left) == mobiles.end())
+                                                stationars.insert(left);
+                                }
                                 rightIt = d.erase(leftIt);
                                 ++collapseCnt;
                                 if (!startCollapse){
@@ -62,6 +64,10 @@ void Medici::PartialCollapse(std::vector<PlayingCard> &d){
 }
 
 bool Medici::Collapse() {
+        return Collapse(false);
+}
+
+bool Medici::Collapse(bool calculateMobilesAndStationars) {
         collapses.clear();
         mobiles.clear();
         stationars.clear();
@@ -69,7 +75,7 @@ bool Medici::Collapse() {
         for(auto it = deck.begin(); it != deck.end(); ++it){
                 collapsingDeck.push_back(*it);
                 if (collapsingDeck.size() > 2)
-                        PartialCollapse(collapsingDeck);
+                        PartialCollapse(collapsingDeck, calculateMobilesAndStationars);
         }
         
         collapsed = CollapsingCondition(collapsingDeck);
