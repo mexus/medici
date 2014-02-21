@@ -1,4 +1,5 @@
 #include "calculator.h"
+#include "i-ching/i_ching.h"
 #include <cstdlib>
 #include <atomic>
 #include <thread>
@@ -63,21 +64,23 @@ namespace dream_hacking {
                                         ++localVariantsChecked;
                                         if (selector.Test(testingDeck->GetDeck())){
                                                 if (testingDeck->Collapse()){
-                                                        if (maximizationFunction){
-                                                                unsigned int value = maximizationFunction(testingDeck);
-                                                                std::lock_guard<std::mutex> lk(mCommonVars);
-                                                                if (value > maximumValue){
-                                                                        maximumValue = value;
-                                                                        idealDeck.reset(new Medici(* testingDeck.get()));
+                                                        if (IChingBalanced(testingDeck)){
+                                                                if (maximizationFunction){
+                                                                        unsigned int value = maximizationFunction(testingDeck);
+                                                                        std::lock_guard<std::mutex> lk(mCommonVars);
+                                                                        if (value > maximumValue){
+                                                                                maximumValue = value;
+                                                                                idealDeck.reset(new Medici(* testingDeck.get()));
 
-                                                                        auto &s = log(logxx::debug) << "Found deck \n";
-                                                                        PrintDeck(testingDeck, s);
-                                                                        s << "\nValue = " << value << logxx::endl;
+                                                                                auto &s = log(logxx::debug) << "Found deck \n";
+                                                                                PrintDeck(testingDeck, s);
+                                                                                s << "\nValue = " << value << logxx::endl;
+                                                                        }
+                                                                } else {
+                                                                        idealDeck = testingDeck;
+                                                                        interrupt = true;
+                                                                        break;
                                                                 }
-                                                        } else {
-                                                                idealDeck = testingDeck;
-                                                                interrupt = true;
-                                                                break;
                                                         }
                                                 }
                                         }
@@ -107,6 +110,19 @@ namespace dream_hacking {
 
         double Calculator::GetLastPerformance() const {
                 return lastPerformance;
+        }
+
+        void Calculator::SetIChingBalanced(bool v) {
+                onlyIChingBalanced = v;
+        }
+
+        bool Calculator::IChingBalanced(const std::shared_ptr<Medici>& m) const {
+                if (onlyIChingBalanced){
+                        IChing iching;
+                        iching.LoadFromDeck(*m.get());
+                        return iching.IsBalanced();
+                } else
+                        return true;
         }
 
 } // namespace dream_hacking

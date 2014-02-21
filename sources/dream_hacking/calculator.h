@@ -3,6 +3,7 @@
 
 #include "../patience/medici.h"
 #include "range_selectors/range_selector.h"
+#include "i-ching/i_ching.h"
 #include <functional>
 
 namespace dream_hacking {
@@ -12,6 +13,7 @@ namespace dream_hacking {
                 virtual ~Calculator();
                 
                 void SetThreads(size_t);
+                void SetIChingBalanced(bool);
                 
                 std::shared_ptr<Medici> Calculate(time_t timeLimit = 10,
                         const std::function<unsigned int (const std::shared_ptr<Medici>&)> & maximizationFunction = nullptr);
@@ -23,6 +25,10 @@ namespace dream_hacking {
                 static logxx::Log cLog;
                 size_t threadsCount = 1;
                 double lastPerformance = 0.0;
+                bool onlyIChingBalanced = false;
+                
+                IChing iching;
+                bool IChingBalanced(const std::shared_ptr<Medici>&) const;
                 
         private:
                 ComplexRangeSelector selector;
