@@ -53,18 +53,12 @@ void PrintIChing(const dream_hacking::IChing& iching){
         }
 }
 
-int main(int argc, char** argv) {
-        S_LOG("main");
+dream_hacking::ComplexRangeSelector GenerateConditions(const PlayingCard &targetCard){
         using namespace dream_hacking;
-        logxx::GlobalLogLevel(logxx::warning);
-        
-        PlayingCard targetCard{PlayingCard::Ten, PlayingCard::Hearts};
-        
         ExistentialRangeSelector target(19, 24);
         target.AddCard(targetCard);
         
         UniversalRangeSelector ownActions(3, 7);
-        //ownActions.AddCard({PlayingCard::Ace, true});
 	ownActions.AddCard({PlayingCard::Six});
 	ownActions.AddCard({PlayingCard::Seven});
 	ownActions.AddCard({PlayingCard::Nine});
@@ -84,6 +78,16 @@ int main(int argc, char** argv) {
         ComplexRangeSelector conditions;
         conditions.AddRangeSelectors(target, ownActions, firstCard, secondCard, thirdCard);
         
+        return conditions;
+}
+
+int main(int argc, char** argv) {
+        S_LOG("main");
+        using namespace dream_hacking;
+        logxx::GlobalLogLevel(logxx::warning);
+        
+        PlayingCard targetCard{PlayingCard::Ace, PlayingCard::Hearts};
+        auto conditions = GenerateConditions(targetCard);
         Calculator calc(conditions);
         
         time_t timeLimit = 15;
