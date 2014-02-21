@@ -88,5 +88,28 @@ namespace dream_hacking {
                 
                 return state;
         }
+        
+        bool IsYin(HexagramState state){
+                return state == OpenedLine || state == OpenedLineStrong || state == OpenedLineWeak;
+        }
+
+        bool IChing::IsBalanced() const {
+                S_LOG("IsBalanced");
+                for (int i = 0; i < 6; ++i){
+                        unsigned short int yins(0), yangs(0);
+                        for (auto &pair : hexagrams){
+                                if (IsYin(pair.second[i]))
+                                        ++yins;
+                                else
+                                        ++yangs;
+                        }
+                        if (yins != yangs){
+                                log(logxx::debug, i) << "Line is not balanced: " << yangs << " Yangs and " << yins << " yins" << logxx::endl;
+                                return false;
+                        }
+                }
+                return true;
+        }
+
 
 } //namespace dream_hacking 

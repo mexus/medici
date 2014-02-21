@@ -24,6 +24,8 @@ namespace dream_hacking {
                 
                 void LoadFromDeck(const Medici &);
                 std::map<PlayingCard::Suit, Hexagram> hexagrams;
+                
+                bool IsBalanced() const;
         private:
                 static logxx::Log cLog;
                 

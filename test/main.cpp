@@ -736,6 +736,36 @@ bool TestIChing(){
         }
 }
 
+bool TestIChingBalanced(){
+        S_LOG("Test I-Ching balanced");
+        using namespace dream_hacking;
+        IChing iching;
+        std::map<PlayingCard::Suit, Hexagram> unbalancedHexagrams{
+                {PlayingCard::Hearts, {SolidLineStrong, SolidLineWeak, SolidLine, SolidLineWeak, OpenedLine, OpenedLine}},
+                {PlayingCard::Diamonds, {OpenedLineWeak, SolidLineWeak, SolidLine, SolidLineWeak, SolidLine, OpenedLine}},
+                {PlayingCard::Clubs, {SolidLineStrong, OpenedLineStrong, OpenedLine, SolidLineWeak, OpenedLine, SolidLine}},
+                {PlayingCard::Spades, {OpenedLineWeak, OpenedLineStrong, OpenedLine, OpenedLineStrong, SolidLine, SolidLine}}
+        };
+        iching.hexagrams = unbalancedHexagrams;
+        if (iching.IsBalanced()){
+                log(logxx::error) << "Hexagrams are unbalanced, but reported as balanced" << logxx::endl;
+                return false;
+        }
+        std::map<PlayingCard::Suit, Hexagram> balancedHexagrams{
+                {PlayingCard::Hearts, {SolidLineStrong, SolidLineWeak, SolidLine, SolidLineWeak, OpenedLine, OpenedLine}},
+                {PlayingCard::Diamonds, {OpenedLineWeak, SolidLineWeak, SolidLine, OpenedLineWeak, SolidLine, OpenedLine}},
+                {PlayingCard::Clubs, {SolidLineStrong, OpenedLineStrong, OpenedLine, SolidLineWeak, OpenedLine, SolidLine}},
+                {PlayingCard::Spades, {OpenedLineWeak, OpenedLineStrong, OpenedLine, OpenedLineStrong, SolidLine, SolidLine}}
+        };
+        iching.hexagrams = balancedHexagrams;
+        if (!iching.IsBalanced()){
+                log(logxx::error) << "Hexagrams are balanced, but reported as unbalanced" << logxx::endl;
+                return false;
+        }
+        log(logxx::info) << "OK" << logxx::endl;
+        return true;
+}
+
 #define RUN_TEST(function) \
 if (!function()) \
         log(logxx::warning, #function) << "TEST FAILED" << logxx::endl;
@@ -761,6 +791,7 @@ int main() {
         RUN_TEST(TestMultiThreadCalculator);
         RUN_TEST(TestMobilesAndStationars);
         RUN_TEST(TestIChing);
+        RUN_TEST(TestIChingBalanced);
         
         return 0;
 }
