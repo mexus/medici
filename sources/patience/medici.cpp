@@ -72,7 +72,8 @@ bool Medici::Collapse() {
                         PartialCollapse(collapsingDeck);
         }
         
-        return CollapsingCondition(collapsingDeck);
+        collapsed = CollapsingCondition(collapsingDeck);
+        return collapsed;
 }
 
 const std::set<PlayingCard>& Medici::GetMobiles() const {
@@ -83,3 +84,6 @@ const std::set<PlayingCard>& Medici::GetStationars() const {
         return stationars;
 }
 
+bool Medici::IsCollapsed() const {
+        return collapsed;
+}
