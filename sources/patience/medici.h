@@ -1,6 +1,7 @@
 #ifndef MEDICI_H
 #define	MEDICI_H
 
+#include <set>
 #include "patience.h"
 
 class Medici : public Patience {
@@ -11,8 +12,12 @@ public:
         virtual bool Collapse();
         std::map<PlayingCard, unsigned int> GetCollapses() const;
         unsigned int GetCollapses(const PlayingCard&) const;
+        
+        const std::set<PlayingCard>& GetMobiles() const;
+        const std::set<PlayingCard>& GetStationars() const;
 private:
         std::map<PlayingCard, unsigned int> collapses;
+        std::set<PlayingCard> mobiles, stationars;
         
         static bool CollapsingCondition(const std::vector<PlayingCard> &);
         void PartialCollapse(std::vector<PlayingCard> &);

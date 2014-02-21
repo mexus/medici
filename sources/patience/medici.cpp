@@ -36,10 +36,14 @@ void Medici::PartialCollapse(std::vector<PlayingCard> &d){
                         auto leftIt = rightIt - 2;
 
                         const PlayingCard& right = *rightIt;
+                        const PlayingCard& middle = *(rightIt - 1);
                         const PlayingCard& left = *leftIt;
 
                         if (right.GetNumber() == left.GetNumber() ||
                                 right.GetSuit() == left.GetSuit()){
+                                mobiles.insert(middle);
+                                if (mobiles.find(left) == mobiles.end())
+                                        stationars.insert(left);
                                 rightIt = d.erase(leftIt);
                                 ++collapseCnt;
                                 if (!startCollapse){
@@ -59,6 +63,8 @@ void Medici::PartialCollapse(std::vector<PlayingCard> &d){
 
 bool Medici::Collapse() {
         collapses.clear();
+        mobiles.clear();
+        stationars.clear();
         std::vector<PlayingCard> collapsingDeck;
         for(auto it = deck.begin(); it != deck.end(); ++it){
                 collapsingDeck.push_back(*it);
@@ -67,5 +73,13 @@ bool Medici::Collapse() {
         }
         
         return CollapsingCondition(collapsingDeck);
+}
+
+const std::set<PlayingCard>& Medici::GetMobiles() const {
+        return mobiles;
+}
+
+const std::set<PlayingCard>& Medici::GetStationars() const {
+        return stationars;
 }
 
