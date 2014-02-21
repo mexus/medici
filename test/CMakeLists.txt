@@ -1,4 +1,4 @@
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Og")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
 
 add_executable(medichi-test
