@@ -89,16 +89,29 @@ int main(int argc, char** argv) {
         using namespace dream_hacking;
         logxx::GlobalLogLevel(logxx::warning);
         
-        PlayingCard targetCard{PlayingCard::Ace, PlayingCard::Hearts};
+        time_t timeLimit = 15;
+        size_t threads = 1;
+        PlayingCard targetCard;
+        if (argc > 1){
+                try {
+                        targetCard = PlayingCard(argv[1]);
+                } catch (const std::logic_error& e){
+                        log(logxx::error) << e.what() << logxx::endl;
+                        return 1;
+                }
+                log(logxx::info) << "Setting {" << targetCard.Print() << "} as a target card" << logxx::endl;
+        } else if (argc > 2) {
+                timeLimit = std::atoi(argv[2]);
+        } else if (argc > 3){
+                threads = std::atoi(argv[3]);
+        }else {
+                log(logxx::error) << "At least card should be specified" << logxx::endl;
+        }
+                
+        
         auto conditions = GenerateConditions(targetCard);
         Calculator calc(conditions);
-        
-        time_t timeLimit = 15;
-        if (argc > 1)
-                timeLimit = std::atoi(argv[1]);
-        
-        if (argc > 2)
-                calc.SetThreads(std::atoi(argv[2]));
+        calc.SetThreads(threads);
         
         std::shared_ptr<Medici> deck = calc.Calculate(timeLimit, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
                 return d->GetCollapses(targetCard);
