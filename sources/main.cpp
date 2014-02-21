@@ -8,11 +8,17 @@ void PrintDeck(const std::shared_ptr<Medici> deck, std::ostream& s){
         S_LOG("PrintDeck");
         auto cardsDeck = deck->GetDeck();
         auto collapses = deck->GetCollapses();
+//        auto &mobiles = deck->GetMobiles();
+        auto &stationars = deck->GetStationars();
         
         s << "<";
         for (auto it = cardsDeck.begin(); it != cardsDeck.end(); ++it){
                 const PlayingCard &card = *it;
-                s << card.Print(true);
+                std::string cardText = card.Print(true);
+                if (stationars.find(card) != stationars.end()){
+                        s << "[" << cardText << "]";
+                } else
+                        s << cardText;
                 if (collapses.find(card) != collapses.end() && it + 1 != cardsDeck.end())
                         s << "> <";
                 else if (it + 1 != cardsDeck.end())
@@ -37,7 +43,12 @@ int main(int argc, char** argv) {
         target.AddCard(targetCard);
         
         UniversalRangeSelector ownActions(3, 7);
-        ownActions.AddCard({PlayingCard::Ace, true});
+        //ownActions.AddCard({PlayingCard::Ace, true});
+	ownActions.AddCard({PlayingCard::Six});
+	ownActions.AddCard({PlayingCard::Seven});
+	ownActions.AddCard({PlayingCard::Nine});
+	ownActions.AddCard({PlayingCard::Jack});
+	ownActions.AddCard({PlayingCard::Queen});
         
         ExistentialRangeSelector firstCard(0, 0);
         firstCard.AddCard({PlayingCard::Jack});
@@ -61,7 +72,7 @@ int main(int argc, char** argv) {
         if (argc > 2)
                 calc.SetThreads(std::atoi(argv[2]));
         
-        auto deck = calc.Calculate(timeLimit, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
+        std::shared_ptr<Medici> deck = calc.Calculate(timeLimit, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
                 return d->GetCollapses(targetCard);
         });
         
@@ -72,6 +83,7 @@ int main(int argc, char** argv) {
                 return 1;
         } else {
                 auto &s = log(logxx::info);
+                deck->Collapse(true);
                 PrintDeck(deck, s);
                 s << logxx::endl;
                 return 0;
