@@ -26,8 +26,26 @@ namespace dream_hacking {
         }
 
         HexagramState IChing::GetState(const std::set<PlayingCard>& stationars, const PlayingCard& card) {
+                S_LOG("GetState");
                 auto end = stationars.end();
-                return (std::find(stationars.begin(), end, card) != end) ? OpenedLine : SolidLine;
+                bool stationar = std::find(stationars.begin(), end, card) != end;
+                HexagramState state = stationar ? OpenedLine : SolidLine;
+                
+                auto &s = log(logxx::debug);
+                if (s.good()){
+                        if (stationar)
+                                s << "[" << card.Print(true) << "]";
+                        else 
+                                s << "(" << card.Print(true) << ")";
+                        s << " ";
+                        if (state == SolidLine)
+                                s << "======";
+                        else
+                                s << "==__==";
+                        s << logxx::endl;
+                }
+                
+                return state;
         }
 
         HexagramState IChing::GetState(const std::set<PlayingCard>& stationars, const PlayingCard& first, const PlayingCard& second) {
@@ -49,7 +67,6 @@ namespace dream_hacking {
                 else
                         state = OpenedLineStrong;
                 
-                
                 auto &s = log(logxx::debug);
                 if (s.good()){
                         if (firstStationar)
@@ -62,10 +79,10 @@ namespace dream_hacking {
                         else 
                                 s << "(" << second.Print(true) << ")";
                         s << " ";
-                        if (state == OpenedLine || state == OpenedLineStrong || state == OpenedLineWeak)
+                        if (state == SolidLine || state == SolidLineStrong || state == SolidLineWeak)
                                 s << "======";
                         else
-                                s << "==  ==";
+                                s << "==__==";
                         s << logxx::endl;
                 }
                 
