@@ -29,6 +29,30 @@ void PrintDeck(const Deck& d, std::ostream& s, bool abbrevations = true){
         PrintDeck(d.GetDeck(), s, abbrevations);
 }
 
+void PrintDeck(const Medici& d, std::ostream& s, bool abbrevations = true){
+        S_LOG("PrintDeck");
+        if (d.IsCollapsed()){
+                auto deck = d.GetDeck();
+                auto collapses = d.GetCollapses();
+                auto &stationars = d.GetStationars();
+                s << "<";
+                for (auto it = deck.begin(); it != deck.end(); ++ it){
+                        const PlayingCard& card = *it;
+                        std::string cardText = card.Print(abbrevations);
+                        if (stationars.find(card) != stationars.end())
+                                s << "[" << cardText << "]";
+                        else
+                                s << cardText;
+                        if (it + 1 != deck.end() && collapses.find(card) != collapses.end()){
+                                s << "> <";
+                        } else if (it + 1 != deck.end())
+                                s << " ";
+                }
+                s << ">";
+        } else
+                PrintDeck(d.GetDeck(), s, abbrevations);
+}
+
 bool TestCard(){
         S_LOG("TestCard");
         PlayingCard card;
@@ -613,6 +637,53 @@ bool TestMultiThreadCalculator(){
         return res;
 }
 
+bool TestMobilesAndStationars(){
+        S_LOG("TestMobilesAndStationars");
+        static const std::string deckStr = "Вч 9ч Тч Дп 6б Тп 7п Кб 9б 9п 6ч Кк Кп Дк Xп 8б 7б 7ч Вб Вп 6п Дб Вк Xк 8п Тб 9к 6к Xб Кч Тк Xч 8ч 8к Дч 7к";
+        Medici deck;
+        deck.SetDeck(Deck::FromString(deckStr));
+        if (deck.Collapse(true)){
+                auto &s0 = log(logxx::debug);
+                PrintDeck(deck, s0);
+                s0 << logxx::endl;
+                
+                auto &stationars = deck.GetStationars();
+                auto &mobiles = deck.GetMobiles();
+                auto &s = log(logxx::debug, "stationars");
+                for (auto &card: stationars){
+                        s << card.Print(true) << " ";
+                }
+                s << logxx::endl;
+                auto &s2 = log(logxx::debug, "mobiles");
+                for (auto &card: mobiles){
+                        s2 << card.Print(true) << " ";
+                }
+                s2 << logxx::endl;
+                
+                std::set<PlayingCard> etalonStationars {
+                        PlayingCard("Вч"), PlayingCard("Тч"), PlayingCard("Дп"), PlayingCard("7п"), PlayingCard("9б"), PlayingCard("9п"),
+                        PlayingCard("Кк"), PlayingCard("Xп"), PlayingCard("8б"), PlayingCard("7б"), PlayingCard("Вб"), PlayingCard("6п"),
+                        PlayingCard("Вк"), PlayingCard("Xк"), PlayingCard("Тб"), PlayingCard("6к"), PlayingCard("Кч"), PlayingCard("8ч")
+                };
+                
+                if (etalonStationars != stationars){
+                        log(logxx::error) << "Stationars are not equal" << logxx::endl;
+                        return false;
+                } else {
+                        for (auto &mobileCard : mobiles){
+                                if (etalonStationars.find(mobileCard) != etalonStationars.end()){
+                                        log(logxx::error, mobileCard.Print(true)) << "Mobile card, but should be stationar" << logxx::endl;
+                                        return false;
+                                }
+                        }
+                }
+                return true;
+        } else {
+                log(logxx::error) << "Deck should collapse" << logxx::endl;
+                return false;
+        }
+}
+
 #define RUN_TEST(function) \
 if (!function()) \
         log(logxx::warning, #function) << "TEST FAILED" << logxx::endl;
@@ -636,6 +707,7 @@ int main() {
         TestMultithreadPerformance();
         RUN_TEST(TestMultithreadStatistics);
         RUN_TEST(TestMultiThreadCalculator);
+        RUN_TEST(TestMobilesAndStationars);
         
         return 0;
 }
