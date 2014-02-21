@@ -1,4 +1,5 @@
 #include "dream_hacking/calculator.h"
+#include "dream_hacking/i-ching/i_ching.h"
 
 logxx::Log cLog("main");
 
@@ -29,6 +30,26 @@ void PrintDeck(const std::shared_ptr<Medici> deck, std::ostream& s){
         //std::map<PlayingCard, unsigned int>
         for (auto it= collapses.begin(); it != collapses.end(); ++it){
                 s << it->first.Print(true) << ": " << it->second << "\n";
+        }
+}
+
+void PrintIChing(const dream_hacking::IChing& iching){
+        S_LOG("Print I-Ching");
+        for (auto &suitHex : iching.hexagrams){
+                auto &suit = suitHex.first;
+                auto &hex = suitHex.second;
+
+                auto &s = log(logxx::info) << PlayingCard::PrintSuit(suit, false) << "\n";
+                for (size_t i = 0; i != 6; ++i){
+                        auto& state = hex.at(5 - i);
+                        if (state == SolidLine || state == SolidLineStrong || state == SolidLineWeak)
+                                s << "======";
+                        else
+                                s << "==__==";
+                        if (i != 5)
+                                s << "\n";
+                }
+                s << logxx::endl;
         }
 }
 
@@ -86,6 +107,9 @@ int main(int argc, char** argv) {
                 deck->Collapse(true);
                 PrintDeck(deck, s);
                 s << logxx::endl;
+                IChing iching;
+                iching.LoadFromDeck(*deck.get());
+                PrintIChing(iching);
                 return 0;
         }
 }
