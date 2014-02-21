@@ -27,9 +27,12 @@ void PrintDeck(const std::shared_ptr<Medici> deck, std::ostream& s){
         }
         s << ">\n";
         
-        //std::map<PlayingCard, unsigned int>
+        auto N = collapses.size();
+        decltype(N) i = 0;
         for (auto it= collapses.begin(); it != collapses.end(); ++it){
-                s << it->first.Print(true) << ": " << it->second << "\n";
+                s << it->first.Print(true) << ": " << it->second;
+                if (++i != N)
+                        s << ", ";
         }
 }
 
