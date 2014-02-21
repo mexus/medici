@@ -9,6 +9,7 @@
 #include "../sources/patience/medici.h"
 #include "../sources/dream_hacking/range_selectors/range_selector.h"
 #include "../sources/dream_hacking/calculator.h"
+#include "../sources/dream_hacking/i-ching/i_ching.h"
 
 static logxx::Log cLog("test");
 
@@ -677,6 +678,57 @@ bool TestMobilesAndStationars(){
                                 }
                         }
                 }
+                log(logxx::info) << "OK" << logxx::endl;
+                return true;
+        } else {
+                log(logxx::error) << "Deck should collapse" << logxx::endl;
+                return false;
+        }
+}
+
+bool TestIChing(){
+        S_LOG("Test I-Ching");
+        using namespace dream_hacking;
+        static const std::string deckStr = "Вч 9ч Тч Дп 6б Тп 7п Кб 9б 9п 6ч Кк Кп Дк Xп 8б 7б 7ч Вб Вп 6п Дб Вк Xк 8п Тб 9к 6к Xб Кч Тк Xч 8ч 8к Дч 7к";
+        Medici deck;
+        deck.SetDeck(Deck::FromString(deckStr));
+        if (deck.Collapse(true)){
+                IChing iching;
+                iching.LoadFromDeck(deck);
+                for (auto &suitHex : iching.hexagrams){
+                        auto &suit = suitHex.first;
+                        auto &hex = suitHex.second;
+                      
+                        auto &s = log(logxx::debug) << PlayingCard::PrintSuit(suit, false) << "\n";
+                        for (size_t i = 0; i != 6; ++i){
+                                HexagramState& state = hex.at(5 - i);
+                                if (state == SolidLine || state == SolidLineStrong || state == SolidLineWeak)
+                                        s << "======";
+                                else
+                                        s << "==__==";
+                                if (i != 5)
+                                        s << "\n";
+                        }
+                        s << logxx::endl;
+                }
+                std::map<PlayingCard::Suit, Hexagram> etalonHexagrams{
+                        {PlayingCard::Hearts, {SolidLineStrong, SolidLineWeak, SolidLine, SolidLineWeak, OpenedLine, OpenedLine}},
+                        {PlayingCard::Diamonds, {OpenedLineWeak, SolidLineWeak, SolidLine, SolidLineWeak, SolidLine, OpenedLine}},
+                        {PlayingCard::Clubs, {SolidLineStrong, OpenedLineStrong, OpenedLine, SolidLineWeak, OpenedLine, SolidLine}},
+                        {PlayingCard::Spades, {OpenedLineWeak, OpenedLineStrong, OpenedLine, OpenedLineStrong, SolidLine, SolidLine}}
+                };
+                
+                for (auto &suitHex : iching.hexagrams){
+                        auto &suit = suitHex.first;
+                        auto &hex = suitHex.second;
+                        auto &etalonHex = etalonHexagrams[suit];
+                        
+                        if (hex != etalonHex){
+                                log(logxx::error, PlayingCard::PrintSuit(suit)) << "Hexagrams are not equal" << logxx::endl;
+                                return false;
+                        }
+                }
+                log(logxx::info) << "OK" << logxx::endl;
                 return true;
         } else {
                 log(logxx::error) << "Deck should collapse" << logxx::endl;
@@ -708,6 +760,7 @@ int main() {
         RUN_TEST(TestMultithreadStatistics);
         RUN_TEST(TestMultiThreadCalculator);
         RUN_TEST(TestMobilesAndStationars);
+        RUN_TEST(TestIChing);
         
         return 0;
 }
