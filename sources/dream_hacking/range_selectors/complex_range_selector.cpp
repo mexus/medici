@@ -48,10 +48,8 @@ namespace dream_hacking {
 
         void ComplexRangeSelector::AddRangeSelector(const RangeSelector& s) {
                 selectors.emplace_back(s.Copy());
-                if (!init || s.from < start){
+                if (selectors.empty() || s.from < start)
                         start = s.from;
-                        init = true;
-                }
         }
 
         void ComplexRangeSelector::Clear() {

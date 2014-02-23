@@ -27,7 +27,6 @@ namespace dream_hacking {
                 typedef std::shared_ptr<RangeSelector> PRangeSelector;
                 std::vector<PRangeSelector> selectors;
                 
-                bool init = false;
                 size_t start = 0;
         };
 
