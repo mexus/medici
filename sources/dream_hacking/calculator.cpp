@@ -68,6 +68,7 @@ namespace dream_hacking {
         }
 
         bool Calculator::TestDeck(Medici& d, IChing& iching) const {
+		//Bottleneck is selector.Test
                 return selector.Test(d.GetDeck()) && d.Collapse(true) && (!iChingAnalize || IChingBalanced(d, iching)) ;
         }
         
@@ -79,7 +80,7 @@ namespace dream_hacking {
                         maximumValue = value;
                         idealDeck = std::make_shared<Medici>(deck);
 
-                        auto &s = log(logxx::debug) << "Found deck \n";
+                        auto &s = log(logxx::notice) << "Found deck \n";
                         PrintDeck(deck, s);
                         s << "\nValue = " << value << logxx::endl;
                 }
