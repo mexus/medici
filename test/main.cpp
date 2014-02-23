@@ -468,7 +468,7 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
                 return false;
         }
         
-        log(logxx::info) << "OK" << logxx::endl;
+        log(logxx::info, "Threads " + std::to_string(threads)) << "OK" << logxx::endl;
         return true;
 }
 
@@ -647,7 +647,7 @@ bool TestMultiThreadCalculator(){
         for (size_t threads = 1; threads <= maxThreads; ++threads){
                 double perf(0.0);
                 if (TestCalculator(threads, "TestMultiThreadCalculator", &perf)){
-                        log(logxx::info, threads) << (long long int)perf << " decks per second" << logxx::endl;
+                        log(logxx::notice, threads) << (long long int)perf << " decks per second" << logxx::endl;
                         if (perf > maxPerf){
                                 maxPerf = perf;
                                 optimalThreads = threads;
