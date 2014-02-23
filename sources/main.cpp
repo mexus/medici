@@ -119,8 +119,8 @@ int main(int argc, char** argv) {
         calc.SetThreads(threads);
         calc.ActivateIChingAnalyze();
         
-        std::shared_ptr<Medici> deck = calc.Calculate(timeLimit, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
-                return d->GetCollapses(targetCard);
+        std::shared_ptr<Medici> deck = calc.Calculate(timeLimit, [&targetCard](const Medici & d) -> unsigned int {
+                return d.GetCollapses(targetCard);
         });
         
         log(logxx::info) << "Performance: " << (unsigned long long int)calc.GetLastPerformance() << " decks per second" << logxx::endl;
