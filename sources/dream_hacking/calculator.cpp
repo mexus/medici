@@ -1,12 +1,15 @@
 #include "calculator.h"
 #include "i-ching/i_ching.h"
 #include <cstdlib>
-#include <atomic>
 #include <thread>
 
 namespace dream_hacking {
         
         logxx::Log Calculator::cLog("Calculator");
+
+        Calculator::Calculator() {
+
+        }
 
         Calculator::Calculator(const ComplexRangeSelector& selector) : selector(selector) {
         }
@@ -18,9 +21,9 @@ namespace dream_hacking {
                 return selector;
         }
 
-        void Calculator::PrintDeck(const std::shared_ptr<Medici>& deck, std::ostream& s) {
+        void Calculator::PrintDeck(const Medici& deck, std::ostream& s) {
                 if (s.good()){
-                        auto cardsDeck = deck->GetDeck();
+                        auto cardsDeck = deck.GetDeck();
                         for (auto it = cardsDeck.begin(); it != cardsDeck.end(); ++it){
                                 const PlayingCard& card = *it;
                                 s << card.Print(true);
@@ -35,62 +38,21 @@ namespace dream_hacking {
         }
 
         std::shared_ptr<Medici> Calculator::Calculate(time_t timeLimit,
-                        const std::function<unsigned int (const std::shared_ptr<Medici>&)> & maximizationFunction)
+                        const std::function<unsigned int (const Medici&)> & maximizationFunction)
         {
                 S_LOG("Calculate");
-                
-                std::mutex mCommonVars;
-                unsigned int maximumValue = 0;
-                unsigned long long int variantsChecked(0);
-                std::shared_ptr<Medici> idealDeck;
-                std::atomic_bool interrupt(false);
                 
                 std::vector<std::thread> threads;
                 
                 using namespace std::chrono;
                 steady_clock::time_point start = steady_clock::now();
                 
-                for (size_t i = 0; i < threadsCount; ++i){
-                        threads.emplace_back([this, &maximizationFunction, &mCommonVars, &maximumValue, &idealDeck, &interrupt,
-                                &variantsChecked, i, timeLimit]()
-                        {
-                                time_t start(time(nullptr));
-                                unsigned int seed = start - i * 10;
-                                IChing iching;
-                                
-                                auto testingDeck = std::make_shared<Medici>();
-                                testingDeck->SetDeck(Deck::GenerateDeck());
-                                unsigned long long int localVariantsChecked(0);
-                                while (!interrupt && time(nullptr) < start + timeLimit){
-                                        ++localVariantsChecked;
-                                        if (selector.Test(testingDeck->GetDeck())){
-                                                if (testingDeck->Collapse(false)){
-                                                        if (IChingBalanced(testingDeck, iching)){
-                                                                if (maximizationFunction){
-                                                                        unsigned int value = maximizationFunction(testingDeck);
-                                                                        std::lock_guard<std::mutex> lk(mCommonVars);
-                                                                        if (value > maximumValue){
-                                                                                maximumValue = value;
-                                                                                idealDeck.reset(new Medici(* testingDeck.get()));
-
-                                                                                auto &s = log(logxx::debug) << "Found deck \n";
-                                                                                PrintDeck(testingDeck, s);
-                                                                                s << "\nValue = " << value << logxx::endl;
-                                                                        }
-                                                                } else {
-                                                                        idealDeck = testingDeck;
-                                                                        interrupt = true;
-                                                                        break;
-                                                                }
-                                                        }
-                                                }
-                                        }
-                                        testingDeck->Mix(Calculator::rnd, &seed);
-                                }
-                                std::lock_guard<std::mutex> lk(mCommonVars);
-                                variantsChecked += localVariantsChecked;
-                        });
-                }
+                variantsChecked = 0;
+                interrupt = false;
+                idealDeck.reset();
+                
+                for (size_t i = 0; i < threadsCount; ++i)
+                        threads.emplace_back(&Calculator::CalculationThread, this, i, timeLimit, maximizationFunction);
                 
                 for (size_t i = 0; i < threadsCount; ++i){
                         std::thread& thread = threads[i];
@@ -105,6 +67,49 @@ namespace dream_hacking {
                 return idealDeck;
         }
 
+        bool Calculator::TestDeck(Medici& d, IChing& iching) const {
+                return selector.Test(d.GetDeck()) && d.Collapse() && (!iChingAnalize || IChingBalanced(d, iching)) ;
+        }
+
+        void Calculator::CalculationThread(size_t threadNumber, time_t timeLimit,
+                        const std::function<unsigned int (const Medici&)> & maximizationFunction)
+        {
+                S_LOG("CalculationThread");
+                time_t start(time(nullptr));
+                unsigned int seed = start - threadNumber * 10;
+                IChing iching;
+
+                Medici testingDeck;
+                testingDeck.SetDeck(Deck::GenerateDeck());
+                unsigned long long int localVariantsChecked(0);
+                while (!interrupt && time(nullptr) < start + timeLimit){
+                        ++localVariantsChecked;
+                        if (TestDeck(testingDeck, iching)){
+                                if (maximizationFunction){
+                                        unsigned int value = maximizationFunction(testingDeck);
+                                        std::lock_guard<std::mutex> lk(mCommonVars);
+                                        if (value > maximumValue){
+                                                maximumValue = value;
+                                                idealDeck = std::make_shared<Medici>(testingDeck);
+
+                                                auto &s = log(logxx::debug, threadNumber) << "Found deck \n";
+                                                PrintDeck(testingDeck, s);
+                                                s << "\nValue = " << value << logxx::endl;
+                                        }
+                                } else {
+                                        std::lock_guard<std::mutex> lk(mCommonVars);
+                                        idealDeck = std::make_shared<Medici>(testingDeck);
+                                        interrupt = true;
+                                        break;
+                                }
+                        }
+                        testingDeck.Mix(Calculator::rnd, &seed);
+                }
+                std::lock_guard<std::mutex> lk(mCommonVars);
+                variantsChecked += localVariantsChecked;
+        }
+
+
         size_t Calculator::rnd(size_t i, unsigned int* seed) {
                 return rand_r(seed) % i;
         }
@@ -117,13 +122,12 @@ namespace dream_hacking {
                 iChingAnalize = true;
         }
 
-        bool Calculator::IChingBalanced(std::shared_ptr<Medici>& m, IChing &iching) const {
-                if (iChingAnalize){
-			m->Collapse(true);
-                        iching.LoadFromDeck(*m.get());
-                        return iching.IsBalanced();
-                } else
-                        return true;
+        bool Calculator::IChingBalanced(Medici& m, IChing &iching) {
+                return iching.LoadFromDeck(m).IsBalanced();
+        }
+
+        void Calculator::Interrupt() {
+                interrupt = true;
         }
 
 } // namespace dream_hacking
