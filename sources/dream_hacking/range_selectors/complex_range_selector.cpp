@@ -12,36 +12,25 @@ namespace dream_hacking {
                 if (selectors.empty()){
                         return true;
                 } else {
-                        auto localSelectors = selectors;
-
                         size_t len = deck.size();
-                        for (size_t i = start; i < len; ++i){
-                                const PlayingCard& card = deck[i];
-                                auto it = localSelectors.begin();
-                                while (it != localSelectors.end()){
-                                        const PRangeSelector& selector = *it;
-                                        if (i > selector->to){
-                                                if (!selector->DefaultReturn())
-                                                        return false;
-                                                it = localSelectors.erase(it);
-                                        } else if (i >= selector->from){
-                                                auto res = selector->CheckCard(card);
-                                                if (res == RangeSelector::Error)
-                                                        return false;
-                                                else if (res == RangeSelector::Ok)
-                                                        it = localSelectors.erase(it);
-                                                else
-                                                        ++it;
-                                        } else
-                                                ++it;
+                        size_t selectorsCnt = selectors.size();
+                        for (size_t i = 0; i < selectorsCnt; ++i){
+                                const PRangeSelector & selector = selectors[i];
+                                bool satisfied = false;
+                                for (size_t j = selector->from; j <= std::min(selector->to, len - 1); ++j){
+                                        const PlayingCard& card = deck[j];
+                                        auto res = selector->CheckCard(card);
+                                        if (res == RangeSelector::Error)
+                                                return false;
+                                        else if (res == RangeSelector::Ok){
+                                                satisfied = true;
+                                                break;
+                                        }
                                 }
-                        }
-
-                        for (auto it = localSelectors.begin(); it != localSelectors.end(); ++it){
-                                PRangeSelector& selector = *it;
-                                if (!selector->DefaultReturn())
+                                if (!satisfied && !selector->DefaultReturn())
                                         return false;
                         }
+                        
                         return true;
                 }
         }
