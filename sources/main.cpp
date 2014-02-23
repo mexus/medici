@@ -87,7 +87,7 @@ dream_hacking::ComplexRangeSelector GenerateConditions(const PlayingCard &target
 int main(int argc, char** argv) {
         S_LOG("main");
         using namespace dream_hacking;
-        logxx::GlobalLogLevel(logxx::warning);
+        logxx::GlobalLogLevel(logxx::notice);
         
         time_t timeLimit = 15;
         size_t threads = 1;
