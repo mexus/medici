@@ -450,7 +450,8 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
                 return false;
         }
         
-        deck = calc.Calculate(15, [&targetCard](const Medici& d) -> unsigned int {
+        static const time_t timeLimit = 5;
+        deck = calc.Calculate(timeLimit, [&targetCard](const Medici& d) -> unsigned int {
                 return d.GetCollapses(targetCard);
         });
         if (performance)
