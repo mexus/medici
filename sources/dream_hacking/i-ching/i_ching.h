@@ -22,7 +22,7 @@ namespace dream_hacking {
                 IChing();
                 virtual ~IChing();
                 
-                void LoadFromDeck(const Medici &);
+                IChing& LoadFromDeck(const Medici &);
                 std::map<PlayingCard::Suit, Hexagram> hexagrams;
                 
                 bool IsBalanced() const;

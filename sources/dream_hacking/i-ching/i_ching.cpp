@@ -11,7 +11,7 @@ namespace dream_hacking {
         IChing::~IChing() {
         }
 
-        void IChing::LoadFromDeck(const Medici& d) {
+        IChing& IChing::LoadFromDeck(const Medici& d) {
                 auto &stationars = d.GetStationars();
                 
                 for (auto &suit : std::set<PlayingCard::Suit>{PlayingCard::Clubs, PlayingCard::Hearts, PlayingCard::Diamonds, PlayingCard::Spades}){
@@ -23,6 +23,8 @@ namespace dream_hacking {
                         hexagram[2 - 1] = GetState(stationars, {PlayingCard::Six, suit}, {PlayingCard::Eight, suit});
                         hexagram[1 - 1] = GetState(stationars, {PlayingCard::Nine, suit}, {PlayingCard::Seven, suit});
                 }
+                
+                return *this;
         }
 
         HexagramState IChing::GetState(const std::set<PlayingCard>& stationars, const PlayingCard& card) {
