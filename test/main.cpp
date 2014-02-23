@@ -471,7 +471,7 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
                 return false;
         }
         
-        log(logxx::info, "Threads " + std::to_string(threads)) << "OK" << logxx::endl;
+        log(logxx::info, std::to_string(threads) + " threads") << "OK" << logxx::endl;
         return true;
 }
 
