@@ -8,6 +8,8 @@
 #include <functional>
 
 namespace dream_hacking {
+        
+        typedef std::function<unsigned int (const Medici&)> MaximizationFunction;
         class Calculator {
         public:
                 Calculator();
@@ -18,7 +20,7 @@ namespace dream_hacking {
                 void ActivateIChingAnalyze();
                 
                 std::shared_ptr<Medici> Calculate(time_t timeLimit = 10,
-                        const std::function<unsigned int (const Medici&)> & maximizationFunction = nullptr);
+                        const MaximizationFunction & maximizationFunction = nullptr);
                 ComplexRangeSelector& AccessConditions();
                 
                 double GetLastPerformance() const;
@@ -42,9 +44,10 @@ namespace dream_hacking {
                 //Thread data--->
                 
                 void CalculationThread(size_t threadNumber, time_t timeLimit,
-                        const std::function<unsigned int (const Medici&)> & maximizationFunction);
+                        const MaximizationFunction & maximizationFunction);
                 
                 bool TestDeck(Medici&, IChing&) const;
+                void Maximization(Medici&, const MaximizationFunction &);
                 
         private:
                 ComplexRangeSelector selector;

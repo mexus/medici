@@ -68,7 +68,7 @@ namespace dream_hacking {
         }
 
         bool Calculator::TestDeck(Medici& d, IChing& iching) const {
-                return selector.Test(d.GetDeck()) && d.Collapse() && (!iChingAnalize || IChingBalanced(d, iching)) ;
+                return selector.Test(d.GetDeck()) && d.Collapse(true) && (!iChingAnalize || IChingBalanced(d, iching)) ;
         }
         
         void Calculator::Maximization(Medici& deck, const MaximizationFunction& f) {
@@ -86,7 +86,7 @@ namespace dream_hacking {
         }
 
         void Calculator::CalculationThread(size_t threadNumber, time_t timeLimit,
-                        const std::function<unsigned int (const Medici&)> & maximizationFunction)
+                        const MaximizationFunction & maximizationFunction)
         {
                 S_LOG("CalculationThread");
                 time_t start(time(nullptr));
