@@ -14,7 +14,10 @@
 static logxx::Log cLog("test");
 
 unsigned int randomSeed;
+size_t optimalThreads = 0;
+
 size_t rnd(size_t i){ return rand_r(&randomSeed) % i; }
+void PrintHexagrams(const dream_hacking::IChing &iching, const std::string& label, logxx::LogLevel logLevel);
 
 void PrintDeck(const std::vector<PlayingCard>& deck, std::ostream& s, bool abbrevations = true){
         S_LOG("PrintDeck");
@@ -447,8 +450,8 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
                 return false;
         }
         
-        deck = calc.Calculate(15, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
-                return d->GetCollapses(targetCard);
+        deck = calc.Calculate(15, [&targetCard](const Medici& d) -> unsigned int {
+                return d.GetCollapses(targetCard);
         });
         if (performance)
                 *performance = calc.GetLastPerformance();
@@ -638,7 +641,6 @@ bool TestMultiThreadCalculator(){
         bool res = true;
         
         double maxPerf(0.0);
-        size_t optimalThreads(0);
         
         S_LOG("TestMultiThreadCalculator");
         auto storedLevel = logxx::GlobalLogLevel();
@@ -717,6 +719,29 @@ bool TestMobilesAndStationars(){
         }
 }
 
+void PrintHexagrams(const dream_hacking::IChing &iching, const std::string& label, logxx::LogLevel logLevel){
+        S_LOG(label + "::PrintHexagrams");
+        using namespace dream_hacking;
+        for (auto &suitHex : iching.hexagrams){
+                auto &suit = suitHex.first;
+                auto &hex = suitHex.second;
+
+                auto &s = log(logLevel) << PlayingCard::PrintSuit(suit, false) << "\n";
+                if (!s.good())
+                        break;
+                for (size_t i = 0; i != 6; ++i){
+                        const HexagramState& state = hex.at(5 - i);
+                        if (state == SolidLine || state == SolidLineStrong || state == SolidLineWeak)
+                                s << "======";
+                        else
+                                s << "==__==";
+                        if (i != 5)
+                                s << "\n";
+                }
+                s << logxx::endl;
+        }
+}
+
 bool TestIChing(){
         S_LOG("Test I-Ching");
         using namespace dream_hacking;
@@ -726,22 +751,7 @@ bool TestIChing(){
         if (deck.Collapse(true)){
                 IChing iching;
                 iching.LoadFromDeck(deck);
-                for (auto &suitHex : iching.hexagrams){
-                        auto &suit = suitHex.first;
-                        auto &hex = suitHex.second;
-                      
-                        auto &s = log(logxx::debug) << PlayingCard::PrintSuit(suit, false) << "\n";
-                        for (size_t i = 0; i != 6; ++i){
-                                HexagramState& state = hex.at(5 - i);
-                                if (state == SolidLine || state == SolidLineStrong || state == SolidLineWeak)
-                                        s << "======";
-                                else
-                                        s << "==__==";
-                                if (i != 5)
-                                        s << "\n";
-                        }
-                        s << logxx::endl;
-                }
+                PrintHexagrams(iching, "Test I-Ching", logxx::debug);
                 std::map<PlayingCard::Suit, Hexagram> etalonHexagrams{
                         {PlayingCard::Hearts, {SolidLineStrong, SolidLineWeak, SolidLine, SolidLineWeak, OpenedLine, OpenedLine}},
                         {PlayingCard::Diamonds, {OpenedLineWeak, SolidLineWeak, SolidLine, SolidLineWeak, SolidLine, OpenedLine}},
@@ -797,6 +807,58 @@ bool TestIChingBalanced(){
         return true;
 }
 
+bool TestIChingCalculator(){
+        S_LOG("Tets I-Ching calculator");
+        using namespace dream_hacking;
+        
+        Calculator calc;
+        calc.ActivateIChingAnalyze();
+        
+        PlayingCard targetCard("Тч");
+        ComplexRangeSelector &conditions = calc.AccessConditions();
+        
+        ExistentialRangeSelector targetRange(19, 24);
+        targetRange.AddCard(targetCard);
+        
+        UniversalRangeSelector ownActions(3, 7);
+	ownActions.AddCard({PlayingCard::Six});
+	ownActions.AddCard({PlayingCard::Seven});
+	ownActions.AddCard({PlayingCard::Nine});
+	ownActions.AddCard({PlayingCard::Jack});
+	ownActions.AddCard({PlayingCard::Queen});
+        
+        ExistentialRangeSelector firstCard(0, 0);
+        firstCard.AddCard({PlayingCard::Jack});
+        
+        ExistentialRangeSelector secondCard(1, 1);
+        secondCard.AddCard({PlayingCard::Nine});
+        
+        ExistentialRangeSelector thirdCard(2, 2);
+        thirdCard.AddCard({PlayingCard::Ace});
+        thirdCard.AddCard({PlayingCard::Ten});
+        
+        conditions.AddRangeSelectors(targetRange, ownActions);
+        time_t timeLimit = 60;
+        auto idealDeck = calc.Calculate(timeLimit);
+        calc.SetThreads(optimalThreads);
+        log(logxx::info, "Conditional test", std::to_string(optimalThreads) + " threads") << "Performance: " << (int)calc.GetLastPerformance() << " decks per second" << logxx::endl;
+        if (!idealDeck){
+                log(logxx::error, "Conditional test") << "Can't find any I-Ching balanced deck in " << timeLimit << "s, " << logxx::endl;
+                return false;
+        } else {
+                auto &s = log(logxx::debug);
+                const Medici& deck = *idealDeck.get();
+                PrintDeck(deck, s);
+                s << logxx::endl;
+                IChing iching;
+                iching.LoadFromDeck(deck);
+                PrintHexagrams(iching, "TestIChingCalculator", logxx::debug);
+        }
+        
+        log(logxx::info) << "OK" << logxx::endl;
+        return true;
+}
+
 #define RUN_TEST(function) \
 if (!function()) \
         log(logxx::error, #function) << "TEST FAILED" << logxx::endl;
@@ -805,6 +867,7 @@ int main() {
         S_LOG("main");
         logxx::GlobalLogLevel(logxx::warning);
         randomSeed = time(nullptr);
+        
         RUN_TEST(TestCard);
         RUN_TEST(TestStatisticsMixing);
         RUN_TEST(TestStatisticsReaching);
@@ -822,6 +885,7 @@ int main() {
         RUN_TEST(TestMobilesAndStationars);
         RUN_TEST(TestIChing);
         RUN_TEST(TestIChingBalanced);
+        RUN_TEST(TestIChingCalculator);
         
         return 0;
 }
