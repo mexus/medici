@@ -68,7 +68,7 @@ namespace dream_hacking {
         }
 
         bool Calculator::TestDeck(Medici& d, IChing& iching) const {
-		//Bottleneck is selector.Test
+		//Bottleneck is still selector.Test
                 return selector.Test(d.GetDeck()) && d.Collapse(true) && (!iChingAnalize || IChingBalanced(d, iching)) ;
         }
         
