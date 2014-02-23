@@ -9,30 +9,26 @@ namespace dream_hacking {
         }
 
         bool ComplexRangeSelector::Test(const std::vector<PlayingCard>& deck) const{
-                if (selectors.empty()){
-                        return true;
-                } else {
-                        size_t len = deck.size();
-                        size_t selectorsCnt = selectors.size();
-                        for (size_t i = 0; i < selectorsCnt; ++i){
-                                const PRangeSelector & selector = selectors[i];
-                                bool satisfied = false;
-                                for (size_t j = selector->from; j <= std::min(selector->to, len - 1); ++j){
-                                        const PlayingCard& card = deck[j];
-                                        auto res = selector->CheckCard(card);
-                                        if (res == RangeSelector::Error)
-                                                return false;
-                                        else if (res == RangeSelector::Ok){
-                                                satisfied = true;
-                                                break;
-                                        }
-                                }
-                                if (!satisfied && !selector->DefaultReturn())
+                size_t len = deck.size();
+                size_t selectorsCnt = selectors.size();
+                for (size_t i = 0; i < selectorsCnt; ++i){
+                        const PRangeSelector & selector = selectors[i];
+                        bool satisfied = false;
+                        for (size_t j = selector->from; j <= std::min(selector->to, len - 1); ++j){
+                                const PlayingCard& card = deck[j];
+                                auto res = selector->CheckCard(card);
+                                if (res == RangeSelector::Error)
                                         return false;
+                                else if (res == RangeSelector::Ok){
+                                        satisfied = true;
+                                        break;
+                                }
                         }
-                        
-                        return true;
+                        if (!satisfied && !selector->DefaultReturn())
+                                return false;
                 }
+
+                return true;
         }
         
         void ComplexRangeSelector::AddRangeSelectors() {
