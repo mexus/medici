@@ -45,7 +45,7 @@ namespace dream_hacking {
                 std::vector<std::thread> threads;
                 
                 using namespace std::chrono;
-                steady_clock::time_point start = steady_clock::now();
+                auto start = steady_clock::now();
                 
                 variantsChecked = 0;
                 interrupt = false;
@@ -59,7 +59,7 @@ namespace dream_hacking {
                         thread.join();
                 }
                 
-                steady_clock::time_point end = steady_clock::now();
+                auto end = steady_clock::now();
                 double duration = duration_cast<milliseconds>(end - start).count() * 1E-3;
                 lastPerformance = static_cast<double>(variantsChecked) / duration;
                 log(logxx::notice) << "Total " << variantsChecked << " decks checked in " << duration << "s" << logxx::endl;
@@ -69,6 +69,20 @@ namespace dream_hacking {
 
         bool Calculator::TestDeck(Medici& d, IChing& iching) const {
                 return selector.Test(d.GetDeck()) && d.Collapse() && (!iChingAnalize || IChingBalanced(d, iching)) ;
+        }
+        
+        void Calculator::Maximization(Medici& deck, const MaximizationFunction& f) {
+                S_LOG("Maximization");
+                unsigned int value = f(deck);
+                std::lock_guard<std::mutex> lk(mCommonVars);
+                if (value > maximumValue){
+                        maximumValue = value;
+                        idealDeck = std::make_shared<Medici>(deck);
+
+                        auto &s = log(logxx::debug) << "Found deck \n";
+                        PrintDeck(deck, s);
+                        s << "\nValue = " << value << logxx::endl;
+                }
         }
 
         void Calculator::CalculationThread(size_t threadNumber, time_t timeLimit,
@@ -86,16 +100,7 @@ namespace dream_hacking {
                         ++localVariantsChecked;
                         if (TestDeck(testingDeck, iching)){
                                 if (maximizationFunction){
-                                        unsigned int value = maximizationFunction(testingDeck);
-                                        std::lock_guard<std::mutex> lk(mCommonVars);
-                                        if (value > maximumValue){
-                                                maximumValue = value;
-                                                idealDeck = std::make_shared<Medici>(testingDeck);
-
-                                                auto &s = log(logxx::debug, threadNumber) << "Found deck \n";
-                                                PrintDeck(testingDeck, s);
-                                                s << "\nValue = " << value << logxx::endl;
-                                        }
+                                        Maximization(testingDeck, maximizationFunction);
                                 } else {
                                         std::lock_guard<std::mutex> lk(mCommonVars);
                                         idealDeck = std::make_shared<Medici>(testingDeck);
