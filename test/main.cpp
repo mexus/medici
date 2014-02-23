@@ -65,8 +65,8 @@ bool TestCard(){
                 ++cnt;
         }
         log(logxx::notice) << "Total " << cnt << " cards" << logxx::endl;
+        log(logxx::info) << "OK" << logxx::endl;
         return cnt == 36;
-        
 }
 
 template<class T1, class T2>
@@ -87,7 +87,7 @@ bool TestStatisticsMixing(){
         std::vector< std::vector<PlayingCard> > decks;
         static const unsigned long sequencesCount = 1E6;
         decks.reserve(sequencesCount);
-        log(logxx::info) << "Generating " << sequencesCount << " decks" << logxx::endl;
+        log(logxx::notice) << "Generating " << sequencesCount << " decks" << logxx::endl;
         auto testDeck = Deck::GenerateDeck();
         decks.push_back(testDeck);
         for (unsigned long i = 0; i < sequencesCount; ++i){
@@ -103,12 +103,14 @@ bool TestStatisticsMixing(){
         }
         
         double duplicatesPercent = Percent(duplicates, sequencesCount);
-        log(logxx::info) << "Found " << duplicates << " duplicates (" << duplicatesPercent << "%)" << logxx::endl;
+        log(logxx::notice) << "Found " << duplicates << " duplicates (" << duplicatesPercent << "%)" << logxx::endl;
         if (duplicatesPercent > maxDuplicates){
                 log(logxx::error) << "Too many duplicates" << logxx::endl;
                 return false;
-        } else
+        } else{
+                log(logxx::info) << "OK" << logxx::endl;
                 return true;
+        }
 }
 
 bool TestStatisticsReaching(){
@@ -132,7 +134,7 @@ bool TestStatisticsReaching(){
                 averageCnt /= static_cast<double>(tests);
                 auto uniqueCnt = Factorial(maxCards);
                 double error = Percent(averageCnt, uniqueCnt);
-                log(logxx::info, std::to_string(maxCards) + " cards") <<
+                log(logxx::notice, std::to_string(maxCards) + " cards") <<
                         "Initial deck reached in " << averageCnt << " permutations (average), should be " << uniqueCnt << ": " << 
                         error << "%" << logxx::endl;
                 if (std::abs(error - 100.0) > maxError){
@@ -141,17 +143,25 @@ bool TestStatisticsReaching(){
                 }
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
 void TestMixPerformance(){
         S_LOG("TestMixPerformance");
+        using namespace std::chrono;
+        
         static const long int permutations = 1E8;
         auto initDeck = Deck::GenerateDeck();
-        time_t start(time(nullptr));
+        
+        auto start = steady_clock::now();
         for (long int i = 0; i < permutations; ++i)
                 Deck::Mix(initDeck, rnd);
-        log(logxx::info) << permutations << " permutations done in " << time(nullptr) - start << " seconds" << logxx::endl;
+        double duration = duration_cast<milliseconds>(steady_clock::now() - start).count() * 1E-3;
+        log(logxx::info) << permutations << " permutations done in " << duration << " seconds = " << (int)(
+                static_cast<double>(permutations) / duration) << " permutations per second" << logxx::endl;
+        
+        log(logxx::info) << "OK" << logxx::endl;
 }
 
 bool TestMedici(){
@@ -174,6 +184,8 @@ bool TestMedici(){
                 s << logxx::endl;
                 return false;
         }
+        
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
@@ -195,12 +207,14 @@ void TestMediciCollapsePerformance(){
         }
         double collapsingPercent = Percent(totalCollapses, tests * sequences);
         double duration = time(nullptr) - testStart;
-        log(logxx::info) << tests << " test done in " << duration << " seconds, average collapsed percent: "
+        log(logxx::notice) << tests << " test done in " << duration << " seconds, average collapsed percent: "
                 << collapsingPercent << "%" <<logxx::endl;
         log(logxx::info) << "Average analizing performance: \n" << 
                 "\t" << static_cast<double>(sequences * tests) / duration << " sequences in a second\n" <<
                 "\t" << static_cast<double>(totalCollapses) / duration << " collapsing sequences in a second"
                 << logxx::endl;
+        
+        log(logxx::info) << "OK" << logxx::endl;
 }
 
 bool TestCardSelector(){
@@ -251,6 +265,7 @@ bool TestCardSelector(){
                 return false;
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
@@ -275,6 +290,7 @@ bool TestUniversalRangeSelector(){
                 return false;
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
@@ -314,6 +330,7 @@ bool TestExistentialRangeSelector(){
                 return false;
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
@@ -369,6 +386,7 @@ bool TestComplexRangeSelector(){
                 return false;
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
         
@@ -379,7 +397,7 @@ inline bool ExampleConditions(const std::vector<PlayingCard> &deck, const Playin
         decltype(deck.begin()) ownActionsBegin = deck.begin() + 3;
         decltype(deck.begin()) ownActionsEnd = deck.begin() + 9;
         
-        return 
+        return
                 deck[0].GetNumber() == PlayingCard::Jack &&
                 deck[1].GetNumber() == PlayingCard::Nine &&
                 (deck[2].GetNumber() == PlayingCard::Ace || deck[2].GetNumber() == PlayingCard::Ten) &&
@@ -421,7 +439,7 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
         auto deck = calc.Calculate();
         if (deck){
                 Medici result = *(deck.get());
-                auto &s = log(logxx::info) << "Found: \n";
+                auto &s = log(logxx::notice) << "Found: \n";
                 PrintDeck(result, s);
                 s << logxx::endl;
         } else {
@@ -437,7 +455,7 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
         
         if (deck){
                 Medici result = *(deck.get());
-                auto &s = log(logxx::info) << "Found: \n";
+                auto &s = log(logxx::notice) << "Found: \n";
                 PrintDeck(result, s);
                 auto val = result.GetCollapses(targetCard);
                 s << "\nValue: " << val << logxx::endl;
@@ -450,6 +468,7 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
                 return false;
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
@@ -525,7 +544,7 @@ void TestMultithreadPerformance(){
                         steady_clock::time_point end = steady_clock::now();
                         double duration = duration_cast<milliseconds>(end - start).count() * 1E-3;
                         performance = static_cast<double>(count * threadsCount) / duration;
-                        log(logxx::info, threadsCount) << "Average performance: " <<
+                        log(logxx::notice, threadsCount) << "Average performance: " <<
                                 performance << 
                                 " collapse attempts per second" << logxx::endl;
                 }
@@ -542,6 +561,10 @@ void TestMultithreadPerformance(){
                         break ;
                 }
         }
+        if (maxPerformance == 0){
+                log(logxx::error) << "Performance is zero!" << logxx::endl;
+        } else
+                log(logxx::info) << "OK" << logxx::endl;
 }
 
 bool TestMultithreadStatistics(){
@@ -595,7 +618,7 @@ bool TestMultithreadStatistics(){
                 }
                 
                 double duplicatesPercent = Percent(duplicates, count * threadsCount);
-                log(logxx::info, threadsCount) << "Found " << duplicates << " duplicates (" << duplicatesPercent << "%)" << logxx::endl;                
+                log(logxx::notice, threadsCount) << "Found " << duplicates << " duplicates (" << duplicatesPercent << "%)" << logxx::endl;                
                 
                 if (duplicatesPercent > maxDuplicates){
                         log(logxx::error) << "Too many duplicates" << logxx::endl;
@@ -603,7 +626,11 @@ bool TestMultithreadStatistics(){
                 }
                 
         }
-        return threadsCount > 1;
+        if (threadsCount > 1){
+                log(logxx::info) << "OK" << logxx::endl;
+                return true;
+        } else
+                return false;
 }
 
 bool TestMultiThreadCalculator(){
@@ -635,7 +662,11 @@ bool TestMultiThreadCalculator(){
         log(logxx::info) << "Max performance: " << (int)maxPerf << " decks per second, at threads = " << optimalThreads << logxx::endl;
         
         logxx::GlobalLogLevel(storedLevel);
-        return res;
+        if (res){
+                log(logxx::info) << "OK" << logxx::endl;
+                return true;
+        } else
+                return false;
 }
 
 bool TestMobilesAndStationars(){
@@ -768,11 +799,11 @@ bool TestIChingBalanced(){
 
 #define RUN_TEST(function) \
 if (!function()) \
-        log(logxx::warning, #function) << "TEST FAILED" << logxx::endl;
+        log(logxx::error, #function) << "TEST FAILED" << logxx::endl;
 
 int main() {
         S_LOG("main");
-        logxx::GlobalLogLevel(logxx::notice);
+        logxx::GlobalLogLevel(logxx::warning);
         randomSeed = time(nullptr);
         RUN_TEST(TestCard);
         RUN_TEST(TestStatisticsMixing);
@@ -785,7 +816,6 @@ int main() {
         RUN_TEST(TestExistentialRangeSelector);
         RUN_TEST(TestComplexRangeSelector);
         RUN_TEST(TestCalculator);
-        logxx::GlobalLogLevel(logxx::debug);
         TestMultithreadPerformance();
         RUN_TEST(TestMultithreadStatistics);
         RUN_TEST(TestMultiThreadCalculator);
