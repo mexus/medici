@@ -840,8 +840,8 @@ bool TestIChingCalculator(){
         
         conditions.AddRangeSelectors(targetRange, ownActions);
         time_t timeLimit = 60;
-        auto idealDeck = calc.Calculate(timeLimit);
         calc.SetThreads(optimalThreads);
+        auto idealDeck = calc.Calculate(timeLimit);
         log(logxx::info, "Conditional test", std::to_string(optimalThreads) + " threads") << "Performance: " << (int)calc.GetLastPerformance() << " decks per second" << logxx::endl;
         if (!idealDeck){
                 log(logxx::error, "Conditional test") << "Can't find any I-Ching balanced deck in " << timeLimit << "s, " << logxx::endl;
