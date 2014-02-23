@@ -1,5 +1,5 @@
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0") #for debug
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3") #for release
 
 add_executable(medichi-test
         main.cpp
