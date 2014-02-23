@@ -54,5 +54,10 @@ namespace dream_hacking {
                 }
         }
 
+        void ComplexRangeSelector::Clear() {
+                selectors.clear();
+        }
+
+
 } // namespace dream_hacking
 
