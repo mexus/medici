@@ -100,18 +100,24 @@ int main(int argc, char** argv) {
                         return 1;
                 }
                 log(logxx::info) << "Setting {" << targetCard.Print() << "} as a target card" << logxx::endl;
-        } else if (argc > 2) {
-                timeLimit = std::atoi(argv[2]);
-        } else if (argc > 3){
-                threads = std::atoi(argv[3]);
-        }else {
+        } else {
                 log(logxx::error) << "At least card should be specified" << logxx::endl;
+                return 1;
+        }
+        if (argc > 2) {
+                timeLimit = std::atoi(argv[2]);
+                log(logxx::info) << "Set time limit to " << timeLimit << " seconds" << logxx::endl;
+        }
+        if (argc > 3){
+                threads = std::atoi(argv[3]);
+                log(logxx::info) << "Running calculation in " << threads << " threads" << logxx::endl;
         }
                 
         
         auto conditions = GenerateConditions(targetCard);
         Calculator calc(conditions);
         calc.SetThreads(threads);
+        calc.ActivateIChingAnalyze();
         
         std::shared_ptr<Medici> deck = calc.Calculate(timeLimit, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
                 return d->GetCollapses(targetCard);

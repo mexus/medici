@@ -56,6 +56,7 @@ namespace dream_hacking {
                         {
                                 time_t start(time(nullptr));
                                 unsigned int seed = start - i * 10;
+                                IChing iching;
                                 
                                 auto testingDeck = std::make_shared<Medici>();
                                 testingDeck->SetDeck(Deck::GenerateDeck());
@@ -63,8 +64,8 @@ namespace dream_hacking {
                                 while (!interrupt && time(nullptr) < start + timeLimit){
                                         ++localVariantsChecked;
                                         if (selector.Test(testingDeck->GetDeck())){
-                                                if (testingDeck->Collapse()){
-                                                        if (IChingBalanced(testingDeck)){
+                                                if (testingDeck->Collapse(false)){
+                                                        if (IChingBalanced(testingDeck, iching)){
                                                                 if (maximizationFunction){
                                                                         unsigned int value = maximizationFunction(testingDeck);
                                                                         std::lock_guard<std::mutex> lk(mCommonVars);
@@ -112,13 +113,13 @@ namespace dream_hacking {
                 return lastPerformance;
         }
 
-        void Calculator::SetIChingBalanced(bool v) {
-                onlyIChingBalanced = v;
+        void Calculator::ActivateIChingAnalyze() {
+                iChingAnalize = true;
         }
 
-        bool Calculator::IChingBalanced(const std::shared_ptr<Medici>& m) const {
-                if (onlyIChingBalanced){
-                        IChing iching;
+        bool Calculator::IChingBalanced(std::shared_ptr<Medici>& m, IChing &iching) const {
+                if (iChingAnalize){
+			m->Collapse(true);
                         iching.LoadFromDeck(*m.get());
                         return iching.IsBalanced();
                 } else

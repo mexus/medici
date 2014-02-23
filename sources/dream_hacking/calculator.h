@@ -13,7 +13,7 @@ namespace dream_hacking {
                 virtual ~Calculator();
                 
                 void SetThreads(size_t);
-                void SetIChingBalanced(bool);
+                void ActivateIChingAnalyze();
                 
                 std::shared_ptr<Medici> Calculate(time_t timeLimit = 10,
                         const std::function<unsigned int (const std::shared_ptr<Medici>&)> & maximizationFunction = nullptr);
@@ -25,10 +25,9 @@ namespace dream_hacking {
                 static logxx::Log cLog;
                 size_t threadsCount = 1;
                 double lastPerformance = 0.0;
-                bool onlyIChingBalanced = false;
+                bool iChingAnalize = false;
                 
-                IChing iching;
-                bool IChingBalanced(const std::shared_ptr<Medici>&) const;
+                bool IChingBalanced(std::shared_ptr<Medici>&, IChing &) const;
                 
         private:
                 ComplexRangeSelector selector;

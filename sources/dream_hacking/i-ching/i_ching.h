@@ -28,6 +28,7 @@ namespace dream_hacking {
                 bool IsBalanced() const;
         private:
                 static logxx::Log cLog;
+                bool strongBalance = false;
                 
                 static HexagramState GetState(const std::set<PlayingCard>& stationars, const PlayingCard&);
                 static HexagramState GetState(const std::set<PlayingCard>& stationars, const PlayingCard& first, const PlayingCard& second);
