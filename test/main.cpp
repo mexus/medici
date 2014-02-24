@@ -9,11 +9,15 @@
 #include "../sources/patience/medici.h"
 #include "../sources/dream_hacking/range_selectors/range_selector.h"
 #include "../sources/dream_hacking/calculator.h"
+#include "../sources/dream_hacking/i-ching/i_ching.h"
 
 static logxx::Log cLog("test");
 
 unsigned int randomSeed;
+size_t optimalThreads = 0;
+
 size_t rnd(size_t i){ return rand_r(&randomSeed) % i; }
+void PrintHexagrams(const dream_hacking::IChing &iching, const std::string& label, logxx::LogLevel logLevel);
 
 void PrintDeck(const std::vector<PlayingCard>& deck, std::ostream& s, bool abbrevations = true){
         S_LOG("PrintDeck");
@@ -29,6 +33,30 @@ void PrintDeck(const Deck& d, std::ostream& s, bool abbrevations = true){
         PrintDeck(d.GetDeck(), s, abbrevations);
 }
 
+void PrintDeck(const Medici& d, std::ostream& s, bool abbrevations = true){
+        S_LOG("PrintDeck");
+        if (d.IsCollapsed()){
+                auto deck = d.GetDeck();
+                auto collapses = d.GetCollapses();
+                auto &stationars = d.GetStationars();
+                s << "<";
+                for (auto it = deck.begin(); it != deck.end(); ++ it){
+                        const PlayingCard& card = *it;
+                        std::string cardText = card.Print(abbrevations);
+                        if (stationars.find(card) != stationars.end())
+                                s << "[" << cardText << "]";
+                        else
+                                s << cardText;
+                        if (it + 1 != deck.end() && collapses.find(card) != collapses.end()){
+                                s << "> <";
+                        } else if (it + 1 != deck.end())
+                                s << " ";
+                }
+                s << ">";
+        } else
+                PrintDeck(d.GetDeck(), s, abbrevations);
+}
+
 bool TestCard(){
         S_LOG("TestCard");
         PlayingCard card;
@@ -40,8 +68,8 @@ bool TestCard(){
                 ++cnt;
         }
         log(logxx::notice) << "Total " << cnt << " cards" << logxx::endl;
+        log(logxx::info) << "OK" << logxx::endl;
         return cnt == 36;
-        
 }
 
 template<class T1, class T2>
@@ -62,7 +90,7 @@ bool TestStatisticsMixing(){
         std::vector< std::vector<PlayingCard> > decks;
         static const unsigned long sequencesCount = 1E6;
         decks.reserve(sequencesCount);
-        log(logxx::info) << "Generating " << sequencesCount << " decks" << logxx::endl;
+        log(logxx::notice) << "Generating " << sequencesCount << " decks" << logxx::endl;
         auto testDeck = Deck::GenerateDeck();
         decks.push_back(testDeck);
         for (unsigned long i = 0; i < sequencesCount; ++i){
@@ -78,12 +106,14 @@ bool TestStatisticsMixing(){
         }
         
         double duplicatesPercent = Percent(duplicates, sequencesCount);
-        log(logxx::info) << "Found " << duplicates << " duplicates (" << duplicatesPercent << "%)" << logxx::endl;
+        log(logxx::notice) << "Found " << duplicates << " duplicates (" << duplicatesPercent << "%)" << logxx::endl;
         if (duplicatesPercent > maxDuplicates){
                 log(logxx::error) << "Too many duplicates" << logxx::endl;
                 return false;
-        } else
+        } else{
+                log(logxx::info) << "OK" << logxx::endl;
                 return true;
+        }
 }
 
 bool TestStatisticsReaching(){
@@ -107,7 +137,7 @@ bool TestStatisticsReaching(){
                 averageCnt /= static_cast<double>(tests);
                 auto uniqueCnt = Factorial(maxCards);
                 double error = Percent(averageCnt, uniqueCnt);
-                log(logxx::info, std::to_string(maxCards) + " cards") <<
+                log(logxx::notice, std::to_string(maxCards) + " cards") <<
                         "Initial deck reached in " << averageCnt << " permutations (average), should be " << uniqueCnt << ": " << 
                         error << "%" << logxx::endl;
                 if (std::abs(error - 100.0) > maxError){
@@ -116,17 +146,25 @@ bool TestStatisticsReaching(){
                 }
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
 void TestMixPerformance(){
         S_LOG("TestMixPerformance");
+        using namespace std::chrono;
+        
         static const long int permutations = 1E8;
         auto initDeck = Deck::GenerateDeck();
-        time_t start(time(nullptr));
+        
+        auto start = steady_clock::now();
         for (long int i = 0; i < permutations; ++i)
                 Deck::Mix(initDeck, rnd);
-        log(logxx::info) << permutations << " permutations done in " << time(nullptr) - start << " seconds" << logxx::endl;
+        double duration = duration_cast<milliseconds>(steady_clock::now() - start).count() * 1E-3;
+        log(logxx::info) << permutations << " permutations done in " << duration << " seconds = " << (int)(
+                static_cast<double>(permutations) / duration) << " permutations per second" << logxx::endl;
+        
+        log(logxx::info) << "OK" << logxx::endl;
 }
 
 bool TestMedici(){
@@ -149,6 +187,8 @@ bool TestMedici(){
                 s << logxx::endl;
                 return false;
         }
+        
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
@@ -170,12 +210,14 @@ void TestMediciCollapsePerformance(){
         }
         double collapsingPercent = Percent(totalCollapses, tests * sequences);
         double duration = time(nullptr) - testStart;
-        log(logxx::info) << tests << " test done in " << duration << " seconds, average collapsed percent: "
+        log(logxx::notice) << tests << " test done in " << duration << " seconds, average collapsed percent: "
                 << collapsingPercent << "%" <<logxx::endl;
         log(logxx::info) << "Average analizing performance: \n" << 
                 "\t" << static_cast<double>(sequences * tests) / duration << " sequences in a second\n" <<
                 "\t" << static_cast<double>(totalCollapses) / duration << " collapsing sequences in a second"
                 << logxx::endl;
+        
+        log(logxx::info) << "OK" << logxx::endl;
 }
 
 bool TestCardSelector(){
@@ -226,6 +268,7 @@ bool TestCardSelector(){
                 return false;
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
@@ -250,6 +293,7 @@ bool TestUniversalRangeSelector(){
                 return false;
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
@@ -289,6 +333,7 @@ bool TestExistentialRangeSelector(){
                 return false;
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
 
@@ -344,6 +389,7 @@ bool TestComplexRangeSelector(){
                 return false;
         }
         
+        log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
         
@@ -354,7 +400,7 @@ inline bool ExampleConditions(const std::vector<PlayingCard> &deck, const Playin
         decltype(deck.begin()) ownActionsBegin = deck.begin() + 3;
         decltype(deck.begin()) ownActionsEnd = deck.begin() + 9;
         
-        return 
+        return
                 deck[0].GetNumber() == PlayingCard::Jack &&
                 deck[1].GetNumber() == PlayingCard::Nine &&
                 (deck[2].GetNumber() == PlayingCard::Ace || deck[2].GetNumber() == PlayingCard::Ten) &&
@@ -396,7 +442,7 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
         auto deck = calc.Calculate();
         if (deck){
                 Medici result = *(deck.get());
-                auto &s = log(logxx::info) << "Found: \n";
+                auto &s = log(logxx::notice) << "Found: \n";
                 PrintDeck(result, s);
                 s << logxx::endl;
         } else {
@@ -404,15 +450,16 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
                 return false;
         }
         
-        deck = calc.Calculate(15, [&targetCard](const std::shared_ptr<Medici>& d) -> unsigned int {
-                return d->GetCollapses(targetCard);
+        static const time_t timeLimit = 5;
+        deck = calc.Calculate(timeLimit, [&targetCard](const Medici& d) -> unsigned int {
+                return d.GetCollapses(targetCard);
         });
         if (performance)
                 *performance = calc.GetLastPerformance();
         
         if (deck){
                 Medici result = *(deck.get());
-                auto &s = log(logxx::info) << "Found: \n";
+                auto &s = log(logxx::notice) << "Found: \n";
                 PrintDeck(result, s);
                 auto val = result.GetCollapses(targetCard);
                 s << "\nValue: " << val << logxx::endl;
@@ -425,6 +472,7 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
                 return false;
         }
         
+        log(logxx::info, std::to_string(threads) + " threads") << "OK" << logxx::endl;
         return true;
 }
 
@@ -500,7 +548,7 @@ void TestMultithreadPerformance(){
                         steady_clock::time_point end = steady_clock::now();
                         double duration = duration_cast<milliseconds>(end - start).count() * 1E-3;
                         performance = static_cast<double>(count * threadsCount) / duration;
-                        log(logxx::info, threadsCount) << "Average performance: " <<
+                        log(logxx::notice, threadsCount) << "Average performance: " <<
                                 performance << 
                                 " collapse attempts per second" << logxx::endl;
                 }
@@ -517,6 +565,10 @@ void TestMultithreadPerformance(){
                         break ;
                 }
         }
+        if (maxPerformance == 0){
+                log(logxx::error) << "Performance is zero!" << logxx::endl;
+        } else
+                log(logxx::info) << "OK" << logxx::endl;
 }
 
 bool TestMultithreadStatistics(){
@@ -570,7 +622,7 @@ bool TestMultithreadStatistics(){
                 }
                 
                 double duplicatesPercent = Percent(duplicates, count * threadsCount);
-                log(logxx::info, threadsCount) << "Found " << duplicates << " duplicates (" << duplicatesPercent << "%)" << logxx::endl;                
+                log(logxx::notice, threadsCount) << "Found " << duplicates << " duplicates (" << duplicatesPercent << "%)" << logxx::endl;                
                 
                 if (duplicatesPercent > maxDuplicates){
                         log(logxx::error) << "Too many duplicates" << logxx::endl;
@@ -578,7 +630,11 @@ bool TestMultithreadStatistics(){
                 }
                 
         }
-        return threadsCount > 1;
+        if (threadsCount > 1){
+                log(logxx::info) << "OK" << logxx::endl;
+                return true;
+        } else
+                return false;
 }
 
 bool TestMultiThreadCalculator(){
@@ -586,7 +642,6 @@ bool TestMultiThreadCalculator(){
         bool res = true;
         
         double maxPerf(0.0);
-        size_t optimalThreads(0);
         
         S_LOG("TestMultiThreadCalculator");
         auto storedLevel = logxx::GlobalLogLevel();
@@ -595,7 +650,7 @@ bool TestMultiThreadCalculator(){
         for (size_t threads = 1; threads <= maxThreads; ++threads){
                 double perf(0.0);
                 if (TestCalculator(threads, "TestMultiThreadCalculator", &perf)){
-                        log(logxx::info, threads) << (long long int)perf << " decks per second" << logxx::endl;
+                        log(logxx::notice, threads) << (long long int)perf << " decks per second" << logxx::endl;
                         if (perf > maxPerf){
                                 maxPerf = perf;
                                 optimalThreads = threads;
@@ -610,17 +665,210 @@ bool TestMultiThreadCalculator(){
         log(logxx::info) << "Max performance: " << (int)maxPerf << " decks per second, at threads = " << optimalThreads << logxx::endl;
         
         logxx::GlobalLogLevel(storedLevel);
-        return res;
+        if (res){
+                log(logxx::info) << "OK" << logxx::endl;
+                return true;
+        } else
+                return false;
+}
+
+bool TestMobilesAndStationars(){
+        S_LOG("TestMobilesAndStationars");
+        static const std::string deckStr = "Вч 9ч Тч Дп 6б Тп 7п Кб 9б 9п 6ч Кк Кп Дк Xп 8б 7б 7ч Вб Вп 6п Дб Вк Xк 8п Тб 9к 6к Xб Кч Тк Xч 8ч 8к Дч 7к";
+        Medici deck;
+        deck.SetDeck(Deck::FromString(deckStr));
+        if (deck.Collapse(true)){
+                auto &s0 = log(logxx::debug);
+                PrintDeck(deck, s0);
+                s0 << logxx::endl;
+                
+                auto &stationars = deck.GetStationars();
+                auto &mobiles = deck.GetMobiles();
+                auto &s = log(logxx::debug, "stationars");
+                for (auto &card: stationars){
+                        s << card.Print(true) << " ";
+                }
+                s << logxx::endl;
+                auto &s2 = log(logxx::debug, "mobiles");
+                for (auto &card: mobiles){
+                        s2 << card.Print(true) << " ";
+                }
+                s2 << logxx::endl;
+                
+                std::set<PlayingCard> etalonStationars {
+                        PlayingCard("Вч"), PlayingCard("Тч"), PlayingCard("Дп"), PlayingCard("7п"), PlayingCard("9б"), PlayingCard("9п"),
+                        PlayingCard("Кк"), PlayingCard("Xп"), PlayingCard("8б"), PlayingCard("7б"), PlayingCard("Вб"), PlayingCard("6п"),
+                        PlayingCard("Вк"), PlayingCard("Xк"), PlayingCard("Тб"), PlayingCard("6к"), PlayingCard("Кч"), PlayingCard("8ч")
+                };
+                
+                if (etalonStationars != stationars){
+                        log(logxx::error) << "Stationars are not equal" << logxx::endl;
+                        return false;
+                } else {
+                        for (auto &mobileCard : mobiles){
+                                if (etalonStationars.find(mobileCard) != etalonStationars.end()){
+                                        log(logxx::error, mobileCard.Print(true)) << "Mobile card, but should be stationar" << logxx::endl;
+                                        return false;
+                                }
+                        }
+                }
+                log(logxx::info) << "OK" << logxx::endl;
+                return true;
+        } else {
+                log(logxx::error) << "Deck should collapse" << logxx::endl;
+                return false;
+        }
+}
+
+void PrintHexagrams(const dream_hacking::IChing &iching, const std::string& label, logxx::LogLevel logLevel){
+        S_LOG(label + "::PrintHexagrams");
+        using namespace dream_hacking;
+        for (auto &suitHex : iching.hexagrams){
+                auto &suit = suitHex.first;
+                auto &hex = suitHex.second;
+
+                auto &s = log(logLevel) << PlayingCard::PrintSuit(suit, false) << "\n";
+                if (!s.good())
+                        break;
+                for (size_t i = 0; i != 6; ++i){
+                        const HexagramState& state = hex.at(5 - i);
+                        if (state == SolidLine || state == SolidLineStrong || state == SolidLineWeak)
+                                s << "======";
+                        else
+                                s << "==__==";
+                        if (i != 5)
+                                s << "\n";
+                }
+                s << logxx::endl;
+        }
+}
+
+bool TestIChing(){
+        S_LOG("Test I-Ching");
+        using namespace dream_hacking;
+        static const std::string deckStr = "Вч 9ч Тч Дп 6б Тп 7п Кб 9б 9п 6ч Кк Кп Дк Xп 8б 7б 7ч Вб Вп 6п Дб Вк Xк 8п Тб 9к 6к Xб Кч Тк Xч 8ч 8к Дч 7к";
+        Medici deck;
+        deck.SetDeck(Deck::FromString(deckStr));
+        if (deck.Collapse(true)){
+                IChing iching;
+                iching.LoadFromDeck(deck);
+                PrintHexagrams(iching, "Test I-Ching", logxx::debug);
+                std::map<PlayingCard::Suit, Hexagram> etalonHexagrams{
+                        {PlayingCard::Hearts, {SolidLineStrong, SolidLineWeak, SolidLine, SolidLineWeak, OpenedLine, OpenedLine}},
+                        {PlayingCard::Diamonds, {OpenedLineWeak, SolidLineWeak, SolidLine, SolidLineWeak, SolidLine, OpenedLine}},
+                        {PlayingCard::Clubs, {SolidLineStrong, OpenedLineStrong, OpenedLine, SolidLineWeak, OpenedLine, SolidLine}},
+                        {PlayingCard::Spades, {OpenedLineWeak, OpenedLineStrong, OpenedLine, OpenedLineStrong, SolidLine, SolidLine}}
+                };
+                
+                for (auto &suitHex : iching.hexagrams){
+                        auto &suit = suitHex.first;
+                        auto &hex = suitHex.second;
+                        auto &etalonHex = etalonHexagrams[suit];
+                        
+                        if (hex != etalonHex){
+                                log(logxx::error, PlayingCard::PrintSuit(suit)) << "Hexagrams are not equal" << logxx::endl;
+                                return false;
+                        }
+                }
+                log(logxx::info) << "OK" << logxx::endl;
+                return true;
+        } else {
+                log(logxx::error) << "Deck should collapse" << logxx::endl;
+                return false;
+        }
+}
+
+bool TestIChingBalanced(){
+        S_LOG("Test I-Ching balanced");
+        using namespace dream_hacking;
+        IChing iching;
+        std::map<PlayingCard::Suit, Hexagram> unbalancedHexagrams{
+                {PlayingCard::Hearts, {SolidLineStrong, SolidLineWeak, SolidLine, SolidLineWeak, OpenedLine, OpenedLine}},
+                {PlayingCard::Diamonds, {OpenedLineWeak, SolidLineWeak, SolidLine, SolidLineWeak, SolidLine, OpenedLine}},
+                {PlayingCard::Clubs, {SolidLineStrong, OpenedLineStrong, OpenedLine, SolidLineWeak, OpenedLine, SolidLine}},
+                {PlayingCard::Spades, {OpenedLineWeak, OpenedLineStrong, OpenedLine, OpenedLineStrong, SolidLine, SolidLine}}
+        };
+        iching.hexagrams = unbalancedHexagrams;
+        if (iching.IsBalanced()){
+                log(logxx::error) << "Hexagrams are unbalanced, but reported as balanced" << logxx::endl;
+                return false;
+        }
+        std::map<PlayingCard::Suit, Hexagram> balancedHexagrams{
+                {PlayingCard::Hearts, {SolidLineStrong, SolidLineWeak, SolidLine, SolidLineWeak, OpenedLine, OpenedLine}},
+                {PlayingCard::Diamonds, {OpenedLineWeak, SolidLineWeak, SolidLine, OpenedLineWeak, SolidLine, OpenedLine}},
+                {PlayingCard::Clubs, {SolidLineStrong, OpenedLineStrong, OpenedLine, SolidLineWeak, OpenedLine, SolidLine}},
+                {PlayingCard::Spades, {OpenedLineWeak, OpenedLineStrong, OpenedLine, OpenedLineStrong, SolidLine, SolidLine}}
+        };
+        iching.hexagrams = balancedHexagrams;
+        if (!iching.IsBalanced()){
+                log(logxx::error) << "Hexagrams are balanced, but reported as unbalanced" << logxx::endl;
+                return false;
+        }
+        log(logxx::info) << "OK" << logxx::endl;
+        return true;
+}
+
+bool TestIChingCalculator(){
+        S_LOG("Tets I-Ching calculator");
+        using namespace dream_hacking;
+        
+        Calculator calc;
+        calc.ActivateIChingAnalyze();
+        
+        PlayingCard targetCard("Тч");
+        ComplexRangeSelector &conditions = calc.AccessConditions();
+        
+        ExistentialRangeSelector targetRange(19, 24);
+        targetRange.AddCard(targetCard);
+        
+        UniversalRangeSelector ownActions(3, 7);
+	ownActions.AddCard({PlayingCard::Six});
+	ownActions.AddCard({PlayingCard::Seven});
+	ownActions.AddCard({PlayingCard::Nine});
+	ownActions.AddCard({PlayingCard::Jack});
+	ownActions.AddCard({PlayingCard::Queen});
+        
+        ExistentialRangeSelector firstCard(0, 0);
+        firstCard.AddCard({PlayingCard::Jack});
+        
+        ExistentialRangeSelector secondCard(1, 1);
+        secondCard.AddCard({PlayingCard::Nine});
+        
+        ExistentialRangeSelector thirdCard(2, 2);
+        thirdCard.AddCard({PlayingCard::Ace});
+        thirdCard.AddCard({PlayingCard::Ten});
+        
+        conditions.AddRangeSelectors(targetRange, ownActions);
+        time_t timeLimit = 60;
+        calc.SetThreads(optimalThreads);
+        auto idealDeck = calc.Calculate(timeLimit);
+        log(logxx::info, "Conditional test", std::to_string(optimalThreads) + " threads") << "Performance: " << (int)calc.GetLastPerformance() << " decks per second" << logxx::endl;
+        if (!idealDeck){
+                log(logxx::error, "Conditional test") << "Can't find any I-Ching balanced deck in " << timeLimit << "s, " << logxx::endl;
+                return false;
+        } else {
+                auto &s = log(logxx::debug);
+                const Medici& deck = *idealDeck.get();
+                PrintDeck(deck, s);
+                s << logxx::endl;
+                IChing iching;
+                iching.LoadFromDeck(deck);
+                PrintHexagrams(iching, "TestIChingCalculator", logxx::debug);
+        }
+        
+        log(logxx::info) << "OK" << logxx::endl;
+        return true;
 }
 
 #define RUN_TEST(function) \
 if (!function()) \
-        log(logxx::warning, #function) << "TEST FAILED" << logxx::endl;
+        log(logxx::error, #function) << "TEST FAILED" << logxx::endl;
 
 int main() {
         S_LOG("main");
-        logxx::GlobalLogLevel(logxx::notice);
+        logxx::GlobalLogLevel(logxx::warning);
         randomSeed = time(nullptr);
+        
         RUN_TEST(TestCard);
         RUN_TEST(TestStatisticsMixing);
         RUN_TEST(TestStatisticsReaching);
@@ -632,10 +880,13 @@ int main() {
         RUN_TEST(TestExistentialRangeSelector);
         RUN_TEST(TestComplexRangeSelector);
         RUN_TEST(TestCalculator);
-        logxx::GlobalLogLevel(logxx::debug);
         TestMultithreadPerformance();
         RUN_TEST(TestMultithreadStatistics);
         RUN_TEST(TestMultiThreadCalculator);
+        RUN_TEST(TestMobilesAndStationars);
+        RUN_TEST(TestIChing);
+        RUN_TEST(TestIChingBalanced);
+        RUN_TEST(TestIChingCalculator);
         
         return 0;
 }
