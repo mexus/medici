@@ -1,5 +1,5 @@
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Og")
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0") #for debug
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3") #for release
 
 add_executable(medichi-test
         main.cpp
@@ -17,6 +17,7 @@ add_executable(medichi-test
         ../sources/dream_hacking/range_selectors/complex_range_selector.cpp
 
         ../sources/dream_hacking/calculator.cpp
+        ../sources/dream_hacking/i-ching/i_ching.cpp
 
 	../sources/logxx/logxx.cpp
 )
