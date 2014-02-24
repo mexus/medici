@@ -1,6 +1,6 @@
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
 
-add_executable(medichi
+add_executable(medici-cli
         main.cpp
 
 	deck/deck.cpp
@@ -21,4 +21,4 @@ add_executable(medichi
 	logxx/logxx.cpp
 )
 
-target_link_libraries (medichi ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (medici-cli ${CMAKE_THREAD_LIBS_INIT})
