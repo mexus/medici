@@ -106,7 +106,7 @@ namespace dream_hacking {
                                         ++yangs;
                         }
                         if (yins != yangs){
-                                log(logxx::debug, i) << "Line is not balanced: " << yangs << " Yangs and " << yins << " yins" << logxx::endl;
+                                log(logxx::debug, i) << "Line is not balanced: " << yangs << " yangs and " << yins << " yins" << logxx::endl;
                                 return false;
                         }
                 }
