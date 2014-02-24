@@ -21,7 +21,7 @@ bool Medici::CollapsingCondition(const std::vector<PlayingCard> &d){
         return d.size() == 2;
 }
 
-void Medici::PartialCollapse(std::vector<PlayingCard> &d, bool calculateMobilesAndStationars){
+void Medici::PartialCollapse(std::vector<PlayingCard> &d){
         S_LOG("PartialCollapse");
         //deck numeration:
         //one, two, ..., left, middle, right
@@ -36,16 +36,10 @@ void Medici::PartialCollapse(std::vector<PlayingCard> &d, bool calculateMobilesA
                         auto leftIt = rightIt - 2;
 
                         const PlayingCard& right = *rightIt;
-                        const PlayingCard& middle = *(rightIt - 1);
                         const PlayingCard& left = *leftIt;
 
                         if (right.GetNumber() == left.GetNumber() ||
                                 right.GetSuit() == left.GetSuit()){
-                                if (calculateMobilesAndStationars){
-                                        mobiles.insert(middle);
-                                        if (mobiles.find(left) == mobiles.end())
-                                                stationars.insert(left);
-                                }
                                 rightIt = d.erase(leftIt);
                                 ++collapseCnt;
                                 if (!startCollapse){
@@ -64,32 +58,14 @@ void Medici::PartialCollapse(std::vector<PlayingCard> &d, bool calculateMobilesA
 }
 
 bool Medici::Collapse() {
-        return Collapse(false);
-}
-
-bool Medici::Collapse(bool calculateMobilesAndStationars) {
         collapses.clear();
-        mobiles.clear();
-        stationars.clear();
         std::vector<PlayingCard> collapsingDeck;
         for(auto it = deck.begin(); it != deck.end(); ++it){
                 collapsingDeck.push_back(*it);
                 if (collapsingDeck.size() > 2)
-                        PartialCollapse(collapsingDeck, calculateMobilesAndStationars);
+                        PartialCollapse(collapsingDeck);
         }
         
-        collapsed = CollapsingCondition(collapsingDeck);
-        return collapsed;
+        return CollapsingCondition(collapsingDeck);
 }
 
-const std::set<PlayingCard>& Medici::GetMobiles() const {
-        return mobiles;
-}
-
-const std::set<PlayingCard>& Medici::GetStationars() const {
-        return stationars;
-}
-
-bool Medici::IsCollapsed() const {
-        return collapsed;
-}

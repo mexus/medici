@@ -14,7 +14,6 @@ add_executable(medichi
         dream_hacking/range_selectors/existential_range_selector.cpp
         dream_hacking/range_selectors/universal_range_selector.cpp
         dream_hacking/range_selectors/complex_range_selector.cpp
-        dream_hacking/i-ching/i_ching.cpp
 
         dream_hacking/calculator.cpp
 

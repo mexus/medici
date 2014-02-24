@@ -22,7 +22,7 @@ namespace dream_hacking {
 //        }
 
         RangeSelector::CheckResult ExistentialRangeSelector::CheckCard(const PlayingCard& card) const {
-                if (cardsSelector.empty() || TestCardSelectors(card))
+                if (TestCardSelectors(card))
                         return RangeSelector::Ok;
                 else
                         return RangeSelector::Continue;
