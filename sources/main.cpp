@@ -5,12 +5,11 @@ logxx::Log cLog("main");
 
 
 
-void PrintDeck(const std::shared_ptr<Medici> deck, std::ostream& s){
+void PrintDeck(const Medici& deck, std::ostream& s){
         S_LOG("PrintDeck");
-        auto cardsDeck = deck->GetDeck();
-        auto collapses = deck->GetCollapses();
-//        auto &mobiles = deck->GetMobiles();
-        auto &stationars = deck->GetStationars();
+        auto cardsDeck = deck.GetDeck();
+        auto collapses = deck.GetCollapses();
+        auto &stationars = deck.GetStationars();
         
         s << "<";
         for (auto it = cardsDeck.begin(); it != cardsDeck.end(); ++it){
@@ -119,22 +118,23 @@ int main(int argc, char** argv) {
         calc.SetThreads(threads);
         calc.ActivateIChingAnalyze();
         
-        std::shared_ptr<Medici> deck = calc.Calculate(timeLimit, [&targetCard](const Medici & d) -> unsigned int {
+        bool res = calc.Calculate(timeLimit, [&targetCard](const Medici & d) -> unsigned int {
                 return d.GetCollapses(targetCard);
         });
         
         log(logxx::info) << "Performance: " << (unsigned long long int)calc.GetLastPerformance() << " decks per second" << logxx::endl;
         
-        if (!deck){
+        if (!res){
                 log(logxx::error) << "No sequences found" << logxx::endl;
                 return 1;
         } else {
                 auto &s = log(logxx::info);
-                deck->Collapse(true);
+                auto deck = calc.GetResult();
+                deck.Collapse(true);
                 PrintDeck(deck, s);
                 s << logxx::endl;
                 IChing iching;
-                iching.LoadFromDeck(*deck.get());
+                iching.LoadFromDeck(deck);
                 PrintIChing(iching);
                 return 0;
         }

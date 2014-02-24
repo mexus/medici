@@ -19,11 +19,11 @@ namespace dream_hacking {
                 void SetThreads(size_t);
                 void ActivateIChingAnalyze();
                 
-                std::shared_ptr<Medici> Calculate(time_t timeLimit = 10,
-                        const MaximizationFunction & maximizationFunction = nullptr);
+                bool Calculate(time_t timeLimit = 10, const MaximizationFunction & maximizationFunction = nullptr);
                 ComplexRangeSelector& AccessConditions();
                 
                 double GetLastPerformance() const;
+                Medici GetResult() const;
                 
                 void Interrupt();
         protected:
@@ -38,7 +38,7 @@ namespace dream_hacking {
                 //<---Thread data:
                 std::mutex mCommonVars;
                 unsigned int maximumValue = 0;
-                std::shared_ptr<Medici> idealDeck;
+                std::unique_ptr<Medici> idealDeck;
                 std::atomic_bool interrupt;
                 unsigned long long int variantsChecked = 0;
                 //Thread data--->

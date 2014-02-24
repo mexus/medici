@@ -439,9 +439,8 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
         Calculator calc(conditions);
         calc.SetThreads(threads);
         
-        auto deck = calc.Calculate();
-        if (deck){
-                Medici result = *(deck.get());
+        if (calc.Calculate()){
+                Medici result = calc.GetResult();
                 auto &s = log(logxx::notice) << "Found: \n";
                 PrintDeck(result, s);
                 s << logxx::endl;
@@ -451,14 +450,14 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
         }
         
         static const time_t timeLimit = 5;
-        deck = calc.Calculate(timeLimit, [&targetCard](const Medici& d) -> unsigned int {
+        bool res = calc.Calculate(timeLimit, [&targetCard](const Medici& d) -> unsigned int {
                 return d.GetCollapses(targetCard);
         });
         if (performance)
                 *performance = calc.GetLastPerformance();
         
-        if (deck){
-                Medici result = *(deck.get());
+        if (res){
+                Medici result = calc.GetResult();
                 auto &s = log(logxx::notice) << "Found: \n";
                 PrintDeck(result, s);
                 auto val = result.GetCollapses(targetCard);
@@ -841,14 +840,14 @@ bool TestIChingCalculator(){
         conditions.AddRangeSelectors(targetRange, ownActions);
         time_t timeLimit = 60;
         calc.SetThreads(optimalThreads);
-        auto idealDeck = calc.Calculate(timeLimit);
+        bool idealDeck = calc.Calculate(timeLimit);
         log(logxx::info, "Conditional test", std::to_string(optimalThreads) + " threads") << "Performance: " << (int)calc.GetLastPerformance() << " decks per second" << logxx::endl;
         if (!idealDeck){
                 log(logxx::error, "Conditional test") << "Can't find any I-Ching balanced deck in " << timeLimit << "s, " << logxx::endl;
                 return false;
         } else {
                 auto &s = log(logxx::debug);
-                const Medici& deck = *idealDeck.get();
+                Medici deck = calc.GetResult();
                 PrintDeck(deck, s);
                 s << logxx::endl;
                 IChing iching;

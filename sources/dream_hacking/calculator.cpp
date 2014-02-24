@@ -37,7 +37,7 @@ namespace dream_hacking {
                 threadsCount = n;
         }
 
-        std::shared_ptr<Medici> Calculator::Calculate(time_t timeLimit,
+        bool Calculator::Calculate(time_t timeLimit,
                         const std::function<unsigned int (const Medici&)> & maximizationFunction)
         {
                 S_LOG("Calculate");
@@ -64,12 +64,20 @@ namespace dream_hacking {
                 lastPerformance = static_cast<double>(variantsChecked) / duration;
                 log(logxx::notice) << "Total " << variantsChecked << " decks checked in " << duration << "s" << logxx::endl;
                 
-                return idealDeck;
+                return idealDeck != nullptr;
         }
 
         bool Calculator::TestDeck(Medici& d, IChing& iching) const {
 		//Bottleneck is still selector.Test
                 return selector.Test(d.GetDeck()) && d.Collapse(true) && (!iChingAnalize || IChingBalanced(d, iching)) ;
+        }
+        
+        namespace {
+                template<typename T, typename... Args>
+                std::unique_ptr<T> make_unique(Args&&... args)
+                {
+                    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+                }
         }
         
         void Calculator::Maximization(Medici& deck, const MaximizationFunction& f) {
@@ -78,7 +86,7 @@ namespace dream_hacking {
                 std::lock_guard<std::mutex> lk(mCommonVars);
                 if (value > maximumValue){
                         maximumValue = value;
-                        idealDeck = std::make_shared<Medici>(deck);
+                        idealDeck = make_unique<Medici>(deck);
 
                         auto &s = log(logxx::notice) << "Found deck \n";
                         PrintDeck(deck, s);
@@ -104,7 +112,7 @@ namespace dream_hacking {
                                         Maximization(testingDeck, maximizationFunction);
                                 } else {
                                         std::lock_guard<std::mutex> lk(mCommonVars);
-                                        idealDeck = std::make_shared<Medici>(testingDeck);
+                                        idealDeck = make_unique<Medici>(testingDeck);
                                         interrupt = true;
                                         break;
                                 }
@@ -134,6 +142,13 @@ namespace dream_hacking {
 
         void Calculator::Interrupt() {
                 interrupt = true;
+        }
+
+        Medici Calculator::GetResult() const {
+                if (idealDeck)
+                        return *idealDeck.get();
+                else
+                        throw std::logic_error("Calculator::GetResult idealDeck is empty");
         }
 
 } // namespace dream_hacking
