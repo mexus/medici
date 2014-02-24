@@ -69,7 +69,7 @@ namespace dream_hacking {
 
         bool Calculator::TestDeck(Medici& d, IChing& iching) const {
 		//Bottleneck is still selector.Test
-                return selector.Test(d.GetDeck()) && d.Collapse(true) && (!iChingAnalize || IChingBalanced(d, iching)) ;
+                return selector.Test(d.GetDeck()) && d.Collapse(true) && (!iChingAnalize || IChingTest(d, iching)) ;
         }
         
         namespace {
@@ -101,6 +101,10 @@ namespace dream_hacking {
                 time_t start(time(nullptr));
                 unsigned int seed = start - threadNumber * 10;
                 IChing iching;
+                
+                if (desirableHex){
+                        iching.desirableHex = {desirableHex->first, desirableHex->second};
+                }
 
                 Medici testingDeck;
                 testingDeck.SetDeck(Deck::GenerateDeck());
@@ -136,7 +140,7 @@ namespace dream_hacking {
                 iChingAnalize = true;
         }
 
-        bool Calculator::IChingBalanced(Medici& m, IChing &iching) {
+        bool Calculator::IChingTest(Medici& m, IChing &iching) {
                 return iching.LoadFromDeck(m).IsBalanced();
         }
 
@@ -149,6 +153,11 @@ namespace dream_hacking {
                         return *idealDeck.get();
                 else
                         throw std::logic_error("Calculator::GetResult idealDeck is empty");
+        }
+
+        void Calculator::SetDesirableIChingHexagram(PlayingCard::Suit s, const Hexagram &hex) {
+                ActivateIChingAnalyze();
+                desirableHex = make_unique<std::pair<PlayingCard::Suit, Hexagram> >(s, hex);
         }
 
 } // namespace dream_hacking

@@ -18,6 +18,7 @@ namespace dream_hacking {
                 
                 void SetThreads(size_t);
                 void ActivateIChingAnalyze();
+                void SetDesirableIChingHexagram(PlayingCard::Suit, const Hexagram&);
                 
                 bool Calculate(time_t timeLimit = 10, const MaximizationFunction & maximizationFunction = nullptr);
                 ComplexRangeSelector& AccessConditions();
@@ -32,8 +33,9 @@ namespace dream_hacking {
                 size_t threadsCount = 1;
                 double lastPerformance = 0.0;
                 bool iChingAnalize = false;
+                std::unique_ptr<std::pair<PlayingCard::Suit, Hexagram> > desirableHex;
                 
-                static bool IChingBalanced(Medici&, IChing &);
+                static bool IChingTest(Medici&, IChing &);
                 
                 //<---Thread data:
                 std::mutex mCommonVars;

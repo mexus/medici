@@ -24,12 +24,16 @@ namespace dream_hacking {
                 
                 IChing& LoadFromDeck(const Medici &);
                 std::map<PlayingCard::Suit, Hexagram> hexagrams;
+                std::pair<PlayingCard::Suit, Hexagram> desirableHex;
+                bool checkDesirable = false;
                 
                 bool IsBalanced() const;
+                static bool HexCmp(const Hexagram &l, const Hexagram &r);
         private:
                 static logxx::Log cLog;
                 bool strongBalance = false;
                 
+                bool IsDesirable() const;
                 static HexagramState GetState(const std::set<PlayingCard>& stationars, const PlayingCard&);
                 static HexagramState GetState(const std::set<PlayingCard>& stationars, const PlayingCard& first, const PlayingCard& second);
 
