@@ -9,6 +9,7 @@
 
 namespace dream_hacking {
         
+	typedef std::vector<std::shared_ptr<Medici> > CalculationResult;
         typedef std::function<unsigned int (const Medici&)> MaximizationFunction;
         class Calculator {
         public:
