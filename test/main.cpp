@@ -5,11 +5,11 @@
 #include <mutex>
 #include <condition_variable>
 
-#include "../sources/logxx/logxx.h"
-#include "../sources/patience/medici.h"
-#include "../sources/dream_hacking/range_selectors/range_selector.h"
-#include "../sources/dream_hacking/calculator.h"
-#include "../sources/dream_hacking/i-ching/i_ching.h"
+#include <logxx/logxx.h>
+#include <patience/medici.h>
+#include <dream_hacking/range_selectors/range_selector.h>
+#include <dream_hacking/calculator.h>
+#include <dream_hacking/i-ching/i_ching.h>
 
 static logxx::Log cLog("test");
 
