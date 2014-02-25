@@ -16,7 +16,7 @@ add_executable(medici-cli
         ../sources/dream_hacking/range_selectors/complex_range_selector.cpp
         ../sources/dream_hacking/i-ching/i_ching.cpp
 
-        ../sources/dream_hacking/calculator.cpp
+        ../sources/dream_hacking/calculator/calculator.cpp
 
 	../sources/logxx/logxx.cpp
 )

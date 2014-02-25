@@ -1,5 +1,4 @@
 #include "calculator.h"
-#include "i-ching/i_ching.h"
 #include <cstdlib>
 #include <thread>
 

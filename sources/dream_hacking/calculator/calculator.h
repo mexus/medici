@@ -1,9 +1,9 @@
 #ifndef CALCULATOR_H
 #define	CALCULATOR_H
 
-#include "../patience/medici.h"
-#include "range_selectors/range_selector.h"
-#include "i-ching/i_ching.h"
+#include <patience/medici.h>
+#include "../range_selectors/range_selector.h"
+#include "../i-ching/i_ching.h"
 #include <atomic>
 #include <functional>
 

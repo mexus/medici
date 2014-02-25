@@ -8,7 +8,7 @@
 #include <logxx/logxx.h>
 #include <patience/medici.h>
 #include <dream_hacking/range_selectors/range_selector.h>
-#include <dream_hacking/calculator.h>
+#include <dream_hacking/calculator/calculator.h>
 #include <dream_hacking/i-ching/i_ching.h>
 
 static logxx::Log cLog("test");
