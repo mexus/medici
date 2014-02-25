@@ -4,6 +4,9 @@
 #include <patience/medici.h>
 #include "../range_selectors/range_selector.h"
 #include "../i-ching/i_ching.h"
+
+#include "i_ching_data.h"
+
 #include <atomic>
 #include <functional>
 
@@ -11,46 +14,46 @@ namespace dream_hacking {
         
 	typedef std::vector<std::shared_ptr<Medici> > CalculationResult;
         typedef std::function<unsigned int (const Medici&)> MaximizationFunction;
+        
         class Calculator {
         public:
                 Calculator();
-                Calculator(const ComplexRangeSelector& conditions);
                 virtual ~Calculator();
                 
-                void SetThreads(size_t);
-                void ActivateIChingAnalyze();
-                void SetDesirableIChingHexagram(PlayingCard::Suit, const Hexagram&);
+                bool Calculate(time_t timeLimit = 10, size_t threads = 1, const MaximizationFunction & maximizationFunction = nullptr);
                 
-                bool Calculate(time_t timeLimit = 10, const MaximizationFunction & maximizationFunction = nullptr);
-                ComplexRangeSelector& AccessConditions();
+                void SetConditions(const ComplexRangeSelector&);
+                void SetConditions();
+                
+                void SetIChingTestBalance(bool);
+                void SetIChingSuitHex(PlayingCard::Suit, const Hexagram&);
+                void SetIChingSuitHex();
                 
                 double GetLastPerformance() const;
-                Medici GetResult() const;
+                CalculationResult GetResult() const;
                 
                 void Interrupt();
         protected:
                 static size_t rnd(size_t, unsigned int* seed);
                 static logxx::Log cLog;
-                size_t threadsCount = 1;
+                
                 double lastPerformance = 0.0;
-                bool iChingAnalize = false;
-                std::unique_ptr<std::pair<PlayingCard::Suit, Hexagram> > desirableHex;
+                unsigned long long int variantsChecked;
+
+                unsigned int maximumValue;
+                MaximizationFunction maximizationFunction;
                 
-                static bool IChingTest(Medici&, IChing &);
-                
-                //<---Thread data:
-                std::mutex mCommonVars;
-                unsigned int maximumValue = 0;
-                std::unique_ptr<Medici> idealDeck;
                 std::atomic_bool interrupt;
-                unsigned long long int variantsChecked = 0;
-                //Thread data--->
+                CalculationResult result;
+                std::mutex mCommonVars;
                 
-                void CalculationThread(size_t threadNumber, time_t timeLimit,
-                        const MaximizationFunction & maximizationFunction);
+                IChingData ichingData;
                 
-                bool TestDeck(Medici&, IChing&) const;
-                void Maximization(Medici&, const MaximizationFunction &);
+                static bool IChingTest(Medici&, IChingData &iChingData);
+                void CalculationThread(size_t threadNumber, time_t timeLimit);
+                
+                bool TestDeck(Medici&, IChingData &iChingData) const;
+                void Maximization(const std::shared_ptr<Medici>&);
                 
         private:
                 ComplexRangeSelector selector;

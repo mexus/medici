@@ -95,7 +95,8 @@ namespace dream_hacking {
                 return state == OpenedLine || state == OpenedLineStrong || state == OpenedLineWeak;
         }
         
-        bool IChing::HexCmp(const Hexagram &l, const Hexagram &r){
+        bool IChing::CheckHexagram(PlayingCard::Suit s, const Hexagram &l) const{
+                const Hexagram &r = hexagrams.at(s);
                 for (int i = 0; i < 6; ++i){
                         bool leftSolid = (l[i] == SolidLine || l[i] == SolidLineStrong || l[i] == SolidLineWeak);
                         bool rightSolid = (r[i] == SolidLine || r[i] == SolidLineStrong || r[i] == SolidLineWeak);
@@ -107,8 +108,6 @@ namespace dream_hacking {
 
         bool IChing::IsBalanced() const {
                 S_LOG("IsBalanced");
-                if (checkDesirable && !IsDesirable())
-                        return false;
                 for (int i = 0; i < 6; ++i){
                         unsigned short int yins(0), yangs(0);
                         for (auto &pair : hexagrams){
@@ -124,10 +123,6 @@ namespace dream_hacking {
                         }
                 }
                 return true;
-        }
-
-        bool IChing::IsDesirable() const {
-                return HexCmp(hexagrams.at(desirableHex.first), desirableHex.second);
         }
 
 
