@@ -61,6 +61,22 @@ void PrintDeck(const std::shared_ptr<Medici>& d, std::ostream &s, bool abbrevati
         PrintDeck(*d.get(), s, abbrevations);
 }
 
+void PrintIChingHexagram(const dream_hacking::IChing& iching, PlayingCard::Suit suit){
+        S_LOG("Print I-Ching hexagram");
+        auto &hex = iching.hexagrams.at(suit);
+        auto &s = log(logxx::info) << PlayingCard::PrintSuit(suit, false) << "\n";
+        for (size_t i = 0; i != 6; ++i){
+                auto& state = hex.at(5 - i);
+                if (state == SolidLine || state == SolidLineStrong || state == SolidLineWeak)
+                        s << "======";
+                else
+                        s << "==__==";
+                if (i != 5)
+                        s << "\n";
+        }
+        s << logxx::endl;
+}
+
 bool TestCard(){
         S_LOG("TestCard");
         PlayingCard card;
@@ -825,6 +841,58 @@ bool TestIChingCalculator(){
         return true;
 }
 
+bool TestIChingHexCompare(){
+        S_LOG("TestIChingHexCompare");
+        using namespace dream_hacking;
+        Medici deck;
+        deck.SetDeck(Deck::FromString(
+                "Вб 9к Тб Дб 7б 7п 6ч Вп Xч Кк 8б Дк 7к Xп Тп 8ч Вк Дч 6п Тч Дп 8к Кб 6б Вч Xб 8п 9б 7ч 9ч Тк 9п 6к Кп"));
+        deck.Collapse(true);
+        PlayingCard::Suit etalonSuit(PlayingCard::Hearts);
+        Hexagram etalonHex{OpenedLine, SolidLine, OpenedLine, OpenedLine, SolidLine, SolidLine};
+        Hexagram wrongHex{OpenedLine, OpenedLine, OpenedLine, OpenedLine, SolidLine, SolidLine};
+        
+        IChing iching;
+        iching.LoadFromDeck(deck);
+        if (!iching.CheckHexagram(etalonSuit, etalonHex)){
+                log(logxx::error) << "Hexagram should be equal, but IChing::CheckHexagram returned false" << logxx::endl;
+                PrintIChingHexagram(iching, etalonSuit);
+                return false;
+        }
+        if (iching.CheckHexagram(etalonSuit, wrongHex)){
+                log(logxx::error) << "Hexagram should not be equal, but IChing::CheckHexagram returned true" << logxx::endl;
+                PrintIChingHexagram(iching, etalonSuit);
+                return false;
+        }
+        log(logxx::info) << "OK" << logxx::endl;
+        return true;
+}
+
+bool TestIChingCalculationSpecificHexagram(){
+        S_LOG("TestIChingCalculationSpecificHexagram");
+        using namespace dream_hacking;
+        Hexagram hex{SolidLine, SolidLine, SolidLine, SolidLine, SolidLine, SolidLine};
+        PlayingCard::Suit suit(PlayingCard::Hearts);
+        
+        Calculator calc;
+        calc.SetIChingSuitHex(suit, hex);
+        
+        if (calc.Calculate()){
+                std::shared_ptr<Medici> deck = calc.GetResult()[0];
+                IChing iching;
+                iching.LoadFromDeck(deck);
+                if (!iching.CheckHexagram(suit, hex)){
+                        log(logxx::error) << "Found wrong hex" << logxx::endl;
+                        return false;
+                }
+        } else {
+                log(logxx::error) << "No deck with specific hexagram found" << logxx::endl;
+                return false;
+        }
+        log(logxx::info) << "OK" << logxx::endl;
+        return true;
+}
+
 #define RUN_TEST(function) \
 if (!function()) {\
         log(logxx::error, #function) << "TEST FAILED" << logxx::endl;\
@@ -856,6 +924,14 @@ int main() {
         RUN_TEST(TestIChing);
         RUN_TEST(TestIChingBalanced);
         RUN_TEST(TestIChingCalculator);
+        RUN_TEST(TestIChingHexCompare);
+        RUN_TEST(TestIChingCalculationSpecificHexagram);
         
-        return res ? 0 : 1;
+        if (res){
+                log(logxx::info) << "All tests done normally" << logxx::endl;
+                return 0;
+        } else {
+                log(logxx::error) << "There were some errors during tests" << logxx::endl;
+                return 1;
+        }
 }
