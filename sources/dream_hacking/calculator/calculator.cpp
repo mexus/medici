@@ -1,5 +1,4 @@
 #include "calculator.h"
-#include "calculation_data.h"
 
 #include <cstdlib>
 #include <thread>
@@ -9,22 +8,16 @@ namespace dream_hacking {
         logxx::Log Calculator::cLog("Calculator");
 
         Calculator::Calculator() {
-
-        }
-
-        Calculator::Calculator(const ComplexRangeSelector& selector) : selector(selector) {
+                ichingData.hexagramCheck = false;
+                ichingData.testIChingBalance = false;
         }
 
         Calculator::~Calculator() {
         }
 
-        ComplexRangeSelector& Calculator::AccessConditions() {
-                return selector;
-        }
-
-        void Calculator::PrintDeck(const Medici& deck, std::ostream& s) {
+        void Calculator::PrintDeck(const std::shared_ptr<Medici>& deck, std::ostream& s) {
                 if (s.good()){
-                        auto cardsDeck = deck.GetDeck();
+                        auto cardsDeck = deck->GetDeck();
                         for (auto it = cardsDeck.begin(); it != cardsDeck.end(); ++it){
                                 const PlayingCard& card = *it;
                                 s << card.Print(true);
@@ -49,6 +42,8 @@ namespace dream_hacking {
                 variantsChecked = 0;
                 interrupt = false;
                 
+                this->maximizationFunction = maximizationFunction;
+                
                 for (size_t i = 0; i < threadsCount; ++i)
                         threads.emplace_back(&Calculator::CalculationThread, this, i, timeLimit);
                 
@@ -65,9 +60,9 @@ namespace dream_hacking {
                 return !result.empty();
         }
 
-        bool Calculator::TestDeck(Medici& d, IChingData &iChingData) const {
+        bool Calculator::TestDeck(const std::shared_ptr<Medici>& d, IChingData &iChingData) const {
 		//Bottleneck is still selector.Test
-                return selector.Test(d.GetDeck()) && d.Collapse(true) && IChingTest(d, iChingData) ;
+                return selector.Test(d->GetDeck()) && d->Collapse(true) && IChingTest(d, iChingData) ;
         }
         
         namespace {
@@ -85,10 +80,11 @@ namespace dream_hacking {
                         if (value > maximumValue)
                                 result.clear();
                         maximumValue = value;
-                        result.push_back(deck);
+                        auto deckCopy = CopyDeck(deck);
+                        result.push_back(deckCopy);
 
                         auto &s = log(logxx::notice) << "Found deck \n";
-                        PrintDeck(*deck.get(), s);
+                        PrintDeck(deckCopy, s);
                         s << "\nValue = " << value << logxx::endl;
                 }
         }
@@ -130,7 +126,7 @@ namespace dream_hacking {
                 return lastPerformance;
         }
 
-        bool Calculator::IChingTest(Medici& m, IChingData &iChingData) {
+        bool Calculator::IChingTest(const std::shared_ptr<Medici>& m, IChingData &iChingData) {
                 if (iChingData.IsActive()){
                         auto &iching = iChingData.iching;
                         iching.LoadFromDeck(m);
@@ -146,6 +142,36 @@ namespace dream_hacking {
 
         void Calculator::Interrupt() {
                 interrupt = true;
+        }
+
+        CalculationResult Calculator::GetResult() const {
+                return result;
+        }
+
+        void Calculator::SetConditions(const ComplexRangeSelector& cond) {
+                selector = cond;
+        }
+
+        void Calculator::SetConditions() {
+                selector.Clear();
+        }
+
+        void Calculator::SetIChingSuitHex(PlayingCard::Suit s, const Hexagram& hex) {
+                ichingData.hexagramCheck = true;
+                ichingData.hexagramSuit = s;
+                ichingData.hexagram = hex;
+        }
+
+        void Calculator::SetIChingSuitHex(){
+                ichingData.hexagramCheck = false;
+        }
+        
+        void Calculator::SetIChingTestBalance(bool flag) {
+                ichingData.testIChingBalance = flag;
+        }
+
+        std::shared_ptr<Medici> Calculator::CopyDeck(const std::shared_ptr<Medici>& d) {
+                return std::make_shared<Medici>(*d.get());
         }
 
 } // namespace dream_hacking

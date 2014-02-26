@@ -27,6 +27,13 @@ namespace dream_hacking {
                 return *this;
         }
 
+        IChing& IChing::LoadFromDeck(const std::shared_ptr<Medici> &deck){
+                if (!deck){
+                        throw std::logic_error("Can't load IChing from a nullptr");
+                }
+                return LoadFromDeck(*deck.get());
+        }
+        
         HexagramState IChing::GetState(const std::set<PlayingCard>& stationars, const PlayingCard& card) {
                 S_LOG("GetState");
                 auto end = stationars.end();

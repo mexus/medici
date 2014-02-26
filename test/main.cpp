@@ -57,6 +57,10 @@ void PrintDeck(const Medici& d, std::ostream& s, bool abbrevations = true){
                 PrintDeck(d.GetDeck(), s, abbrevations);
 }
 
+void PrintDeck(const std::shared_ptr<Medici>& d, std::ostream &s, bool abbrevations = true){
+        PrintDeck(*d.get(), s, abbrevations);
+}
+
 bool TestCard(){
         S_LOG("TestCard");
         PlayingCard card;
@@ -392,24 +396,6 @@ bool TestComplexRangeSelector(){
         log(logxx::info) << "OK" << logxx::endl;
         return true;
 }
-        
-inline bool ExampleConditions(const std::vector<PlayingCard> &deck, const PlayingCard &target){
-        decltype(deck.begin()) targetBegin = deck.begin() + 19;
-        decltype(deck.begin()) targetEnd = deck.begin() + 25;
-        
-        decltype(deck.begin()) ownActionsBegin = deck.begin() + 3;
-        decltype(deck.begin()) ownActionsEnd = deck.begin() + 9;
-        
-        return
-                deck[0].GetNumber() == PlayingCard::Jack &&
-                deck[1].GetNumber() == PlayingCard::Nine &&
-                (deck[2].GetNumber() == PlayingCard::Ace || deck[2].GetNumber() == PlayingCard::Ten) &&
-                std::find(targetBegin, targetEnd, target) != targetEnd &&
-                std::find_if(ownActionsBegin, ownActionsEnd, [](const PlayingCard& p)->bool{
-                        return p.GetNumber() == PlayingCard::Ace;
-                }) == ownActionsEnd &&
-                deck[35].GetNumber() == PlayingCard::Ten;
-}
 
 bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculator", double *performance = nullptr){
         D_LOG(label);
@@ -423,24 +409,15 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
         UniversalRangeSelector ownActions(3, 7);
         ownActions.AddCard({PlayingCard::Ace, true});
         
-        ExistentialRangeSelector firstCard(0, 0);
-        firstCard.AddCard({PlayingCard::Jack});
-        
-        ExistentialRangeSelector secondCard(1, 1);
-        secondCard.AddCard({PlayingCard::Nine});
-        
-        ExistentialRangeSelector thirdCard(2, 2);
-        thirdCard.AddCard({PlayingCard::Ace});
-        thirdCard.AddCard({PlayingCard::Ten});
-        
         ComplexRangeSelector conditions;
-        conditions.AddRangeSelectors(target, ownActions, firstCard, secondCard, thirdCard);
+        conditions.AddRangeSelectors(target, ownActions);
         
-        Calculator calc(conditions);
-        calc.SetThreads(threads);
+        Calculator calc;
+        calc.SetConditions(conditions);
         
-        if (calc.Calculate()){
-                Medici result = calc.GetResult();
+        time_t timeLimit = 5;
+        if (calc.Calculate(timeLimit, threads)){
+                std::shared_ptr<Medici> result = calc.GetResult()[0];
                 auto &s = log(logxx::notice) << "Found: \n";
                 PrintDeck(result, s);
                 s << logxx::endl;
@@ -449,18 +426,17 @@ bool TestCalculator(size_t threads = 1, const std::string &label = "TestCalculat
                 return false;
         }
         
-        static const time_t timeLimit = 5;
-        bool res = calc.Calculate(timeLimit, [&targetCard](const Medici& d) -> unsigned int {
+        bool res = calc.Calculate(timeLimit, threads, [&targetCard](const Medici& d) -> unsigned int {
                 return d.GetCollapses(targetCard);
         });
         if (performance)
                 *performance = calc.GetLastPerformance();
         
         if (res){
-                Medici result = calc.GetResult();
+                std::shared_ptr<Medici> result = calc.GetResult()[0];
                 auto &s = log(logxx::notice) << "Found: \n";
                 PrintDeck(result, s);
-                auto val = result.GetCollapses(targetCard);
+                auto val = result->GetCollapses(targetCard);
                 s << "\nValue: " << val << logxx::endl;
                 if (val < 1){
                         log(logxx::error) << "Not found any positive-valued sequence" << logxx::endl;
@@ -812,10 +788,10 @@ bool TestIChingCalculator(){
         using namespace dream_hacking;
         
         Calculator calc;
-        calc.ActivateIChingAnalyze();
+        calc.SetIChingTestBalance(true);
         
         PlayingCard targetCard("Тч");
-        ComplexRangeSelector &conditions = calc.AccessConditions();
+        ComplexRangeSelector conditions;
         
         ExistentialRangeSelector targetRange(19, 24);
         targetRange.AddCard(targetCard);
@@ -827,27 +803,17 @@ bool TestIChingCalculator(){
 	ownActions.AddCard({PlayingCard::Jack});
 	ownActions.AddCard({PlayingCard::Queen});
         
-        ExistentialRangeSelector firstCard(0, 0);
-        firstCard.AddCard({PlayingCard::Jack});
-        
-        ExistentialRangeSelector secondCard(1, 1);
-        secondCard.AddCard({PlayingCard::Nine});
-        
-        ExistentialRangeSelector thirdCard(2, 2);
-        thirdCard.AddCard({PlayingCard::Ace});
-        thirdCard.AddCard({PlayingCard::Ten});
-        
         conditions.AddRangeSelectors(targetRange, ownActions);
         time_t timeLimit = 60;
-        calc.SetThreads(optimalThreads);
-        bool idealDeck = calc.Calculate(timeLimit);
+        calc.SetConditions(conditions);
+        bool idealDeck = calc.Calculate(timeLimit, optimalThreads);
         log(logxx::info, "Conditional test", std::to_string(optimalThreads) + " threads") << "Performance: " << (int)calc.GetLastPerformance() << " decks per second" << logxx::endl;
         if (!idealDeck){
                 log(logxx::error, "Conditional test") << "Can't find any I-Ching balanced deck in " << timeLimit << "s, " << logxx::endl;
                 return false;
         } else {
                 auto &s = log(logxx::debug);
-                Medici deck = calc.GetResult();
+                std::shared_ptr<Medici> deck = calc.GetResult()[0];
                 PrintDeck(deck, s);
                 s << logxx::endl;
                 IChing iching;
@@ -860,13 +826,17 @@ bool TestIChingCalculator(){
 }
 
 #define RUN_TEST(function) \
-if (!function()) \
-        log(logxx::error, #function) << "TEST FAILED" << logxx::endl;
+if (!function()) {\
+        log(logxx::error, #function) << "TEST FAILED" << logxx::endl;\
+        res = false;\
+        }
 
 int main() {
         S_LOG("main");
         logxx::GlobalLogLevel(logxx::warning);
         randomSeed = time(nullptr);
+        
+        bool res(true);
         
         RUN_TEST(TestCard);
         RUN_TEST(TestStatisticsMixing);
@@ -887,5 +857,5 @@ int main() {
         RUN_TEST(TestIChingBalanced);
         RUN_TEST(TestIChingCalculator);
         
-        return 0;
+        return res ? 0 : 1;
 }

@@ -5,11 +5,11 @@ logxx::Log cLog("main");
 
 
 
-void PrintDeck(const Medici& deck, std::ostream& s){
+void PrintDeck(const std::shared_ptr<Medici>& deck, std::ostream& s){
         S_LOG("PrintDeck");
-        auto cardsDeck = deck.GetDeck();
-        auto collapses = deck.GetCollapses();
-        auto &stationars = deck.GetStationars();
+        auto cardsDeck = deck->GetDeck();
+        auto collapses = deck->GetCollapses();
+        auto &stationars = deck->GetStationars();
         
         s << "<";
         for (auto it = cardsDeck.begin(); it != cardsDeck.end(); ++it){
@@ -86,7 +86,8 @@ dream_hacking::ComplexRangeSelector GenerateConditions(const PlayingCard &target
 int main(int argc, char** argv) {
         S_LOG("main");
         using namespace dream_hacking;
-        logxx::GlobalLogLevel(logxx::notice);
+//        logxx::GlobalLogLevel(logxx::notice);
+        logxx::GlobalLogLevel(logxx::warning);
         
         time_t timeLimit = 15;
         size_t threads = 1;
@@ -114,11 +115,11 @@ int main(int argc, char** argv) {
                 
         
         auto conditions = GenerateConditions(targetCard);
-        Calculator calc(conditions);
-        calc.SetThreads(threads);
-        calc.ActivateIChingAnalyze();
+        Calculator calc;
+        calc.SetConditions(conditions);
+        calc.SetIChingTestBalance(true);
         
-        bool res = calc.Calculate(timeLimit, [&targetCard](const Medici & d) -> unsigned int {
+        bool res = calc.Calculate(timeLimit, threads, [&targetCard](const Medici & d) -> unsigned int {
                 return d.GetCollapses(targetCard);
         });
         
@@ -129,8 +130,8 @@ int main(int argc, char** argv) {
                 return 1;
         } else {
                 auto &s = log(logxx::info);
-                auto deck = calc.GetResult();
-                deck.Collapse(true);
+                std::shared_ptr<Medici> deck = calc.GetResult()[0];
+                deck->Collapse(true);
                 PrintDeck(deck, s);
                 s << logxx::endl;
                 IChing iching;

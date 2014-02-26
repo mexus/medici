@@ -22,7 +22,7 @@ namespace dream_hacking {
                 
                 bool Calculate(time_t timeLimit = 10, size_t threads = 1, const MaximizationFunction & maximizationFunction = nullptr);
                 
-                void SetConditions(const ComplexRangeSelector&);
+                void SetConditions(const ComplexRangeSelector& = ComplexRangeSelector());
                 void SetConditions();
                 
                 void SetIChingTestBalance(bool);
@@ -49,16 +49,17 @@ namespace dream_hacking {
                 
                 IChingData ichingData;
                 
-                static bool IChingTest(Medici&, IChingData &iChingData);
+                static bool IChingTest(const std::shared_ptr<Medici>&, IChingData &iChingData);
                 void CalculationThread(size_t threadNumber, time_t timeLimit);
                 
-                bool TestDeck(Medici&, IChingData &iChingData) const;
+                bool TestDeck(const std::shared_ptr<Medici>&, IChingData &iChingData) const;
                 void Maximization(const std::shared_ptr<Medici>&);
                 
         private:
                 ComplexRangeSelector selector;
                 
-                static void PrintDeck(const Medici&, std::ostream &);
+                std::shared_ptr<Medici> CopyDeck(const std::shared_ptr<Medici>&);
+                static void PrintDeck(const std::shared_ptr<Medici>&, std::ostream &);
 
         };
 } //namespace dream_hacking
