@@ -1,7 +1,7 @@
 #ifndef I_CHING_H
 #define	I_CHING_H
 
-#include "../../patience/medici.h"
+#include <patience/medici.h>
 
 #include <array>
 
@@ -14,6 +14,7 @@ enum HexagramState{
         OpenedLineWeak
 };
 typedef std::array<HexagramState, 6> Hexagram;
+typedef std::array<HexagramState, 3> Trigram;
 
 namespace dream_hacking {
 
@@ -28,6 +29,9 @@ namespace dream_hacking {
                 
                 bool IsBalanced() const;
                 bool CheckHexagram(PlayingCard::Suit, const Hexagram &) const;
+                
+                static Hexagram HexagramFromTrigrams(const Trigram& lower, const Trigram& upper);
+                static void GenerateHexNumbers(std::map<Hexagram, unsigned short>&, std::map<unsigned short, Hexagram> &);
         private:
                 static logxx::Log cLog;
                 bool strongBalance = false; //Not using as for now

@@ -132,5 +132,46 @@ namespace dream_hacking {
                 return true;
         }
 
+        Hexagram IChing::HexagramFromTrigrams(const Trigram& lower, const Trigram& upper) {
+                Hexagram res;
+                for (size_t i = 0; i != 3; ++i){
+                        res[i] = lower[i];
+                        res[i + 3] = upper[i];
+                }
+                return res;
+        }
+
+        void IChing::GenerateHexNumbers(std::map<Hexagram, unsigned short>& hexNumber, std::map<unsigned short, Hexagram>& numberHex) {
+                std::vector<Trigram> trigrams{
+                        {SolidLine, SolidLine, SolidLine},
+                        {SolidLine, OpenedLine, OpenedLine},
+                        {OpenedLine, SolidLine, OpenedLine},
+                        {OpenedLine, OpenedLine, SolidLine},
+                        {OpenedLine, OpenedLine, OpenedLine},
+                        {OpenedLine, SolidLine, SolidLine},
+                        {SolidLine, OpenedLine, SolidLine},
+                        {SolidLine, SolidLine, OpenedLine}
+                };
+                std::vector<unsigned short> numbers{
+                         1, 34,  5, 26, 11,  9, 14, 43,
+                        25, 51,  3, 27, 24, 42, 21, 17,
+                         6, 40, 29,  4,  7, 59, 64, 47,
+                        33, 62, 39, 52, 15, 53, 56, 31,
+                        12, 16,  8, 23,  2, 20, 35, 45,
+                        44, 32, 48, 18, 46, 57, 50, 28,
+                        13, 55, 63, 22, 36, 37, 30, 49,
+                        10, 54, 60, 41, 19, 61, 38, 58
+                };
+                
+                size_t cnt(0);
+                for (Trigram const& lower: trigrams){
+                        for (Trigram const & upper : trigrams){
+                                Hexagram hex = HexagramFromTrigrams(lower, upper);
+                                unsigned short number = numbers[cnt++];
+                                hexNumber[hex] = number;
+                                numberHex[number] = hex;
+                        }
+                }
+        }
 
 } //namespace dream_hacking 

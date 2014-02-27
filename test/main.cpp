@@ -893,6 +893,65 @@ bool TestIChingCalculationSpecificHexagram(){
         return true;
 }
 
+bool TestIChingHexagramFromTrigrams(){
+        S_LOG("TestIChingHexagramFromTrigrams");
+        using namespace dream_hacking;
+        if (
+                IChing::HexagramFromTrigrams({OpenedLine, OpenedLine, SolidLine}, {SolidLine, OpenedLine, OpenedLine}) !=
+                        Hexagram({OpenedLine, OpenedLine, SolidLine, SolidLine, OpenedLine, OpenedLine})
+        ) {
+                log(logxx::error) << "Hexagrams should be equal, but they are not" << logxx::endl;
+                return false;
+        }
+        if (
+                IChing::HexagramFromTrigrams({OpenedLine, SolidLine, SolidLine}, {SolidLine, OpenedLine, OpenedLine}) ==
+                        Hexagram({OpenedLine, OpenedLine, OpenedLine, SolidLine, OpenedLine, OpenedLine})
+        ) {
+                log(logxx::error) << "Hexagrams should not be equal, but they are" << logxx::endl;
+                return false;
+        }
+        log(logxx::info) << "OK" << logxx::endl;
+        return true;
+}
+
+bool TestIChingHexagramNumbers(){
+        S_LOG("TestIChingHexagramNumbers");
+        using namespace dream_hacking;
+        std::map<Hexagram, unsigned short> etalon{
+                {{SolidLine, OpenedLine, OpenedLine, SolidLine, SolidLine, SolidLine}, 25},
+                {{OpenedLine, OpenedLine, SolidLine, OpenedLine, OpenedLine, SolidLine}, 52},
+                {{OpenedLine, SolidLine, SolidLine, SolidLine, SolidLine, SolidLine}, 44},
+                {{SolidLine, SolidLine, OpenedLine, SolidLine, SolidLine, OpenedLine}, 58},
+                {{SolidLine, OpenedLine, OpenedLine, SolidLine, OpenedLine, SolidLine}, 21}
+        };
+        
+        std::map<Hexagram, unsigned short> testHexNumber;
+        std::map<unsigned short, Hexagram> testNumberHex;
+        IChing::GenerateHexNumbers(testHexNumber, testNumberHex);
+        
+        for (unsigned short i = 1; i <= 64; ++i){
+                if (testNumberHex.find(i) == testNumberHex.end()){
+                        log(logxx::error) << "Not found number " << i << logxx::endl;
+                        return false;
+                }
+        }
+        
+        for (auto &pair : etalon){
+                auto &hex = pair.first;
+                auto number = pair.second;
+                if (testHexNumber[hex] != number){
+                        log(logxx::error, "testHexNumber") << "Hexagram doesn't relate to correct number" << logxx::endl;
+                        return false;
+                } else if (testNumberHex[number] != hex){
+                        log(logxx::error, "testNumberHex") << "Number doesn't relate to correct hexagram" << logxx::endl;
+                        return false;
+                }
+        }
+        
+        log(logxx::info) << "OK" << logxx::endl;
+        return true;
+}
+
 #define RUN_TEST(function) \
 if (!function()) {\
         log(logxx::error, #function) << "TEST FAILED" << logxx::endl;\
@@ -926,6 +985,8 @@ int main() {
         RUN_TEST(TestIChingCalculator);
         RUN_TEST(TestIChingHexCompare);
         RUN_TEST(TestIChingCalculationSpecificHexagram);
+        RUN_TEST(TestIChingHexagramFromTrigrams);
+        RUN_TEST(TestIChingHexagramNumbers);
         
         if (res){
                 log(logxx::info) << "All tests done normally" << logxx::endl;
