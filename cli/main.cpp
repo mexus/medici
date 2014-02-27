@@ -37,22 +37,33 @@ void PrintDeck(const std::shared_ptr<Medici>& deck, std::ostream& s){
 
 void PrintIChing(const dream_hacking::IChing& iching){
         S_LOG("Print I-Ching");
+        std::set<PlayingCard::Suit> suits;
         for (auto &suitHex : iching.hexagrams){
-                auto &suit = suitHex.first;
-                auto &hex = suitHex.second;
-
-                auto &s = log(logxx::info) << PlayingCard::PrintSuit(suit, false) << "\n";
-                for (size_t i = 0; i != 6; ++i){
-                        auto& state = hex.at(5 - i);
+                suits.insert(suitHex.first);
+        }
+        
+        std::ostream &s = log(logxx::info) << "\n";
+        auto N = suits.size();
+        decltype(N) cnt = 0;
+        for (auto it = suits.begin(); it != suits.end(); ++it){
+                s << PlayingCard::PrintSuit(*it, false);
+                if (++cnt != N)
+                        s << ", ";
+        }
+        s << "\n";
+        
+        for (size_t i = 0; i != 6; ++i){
+                for (auto suit : suits){
+                        auto &state = iching.hexagrams.at(suit).at(5 - i);
                         if (state == SolidLine || state == SolidLineStrong || state == SolidLineWeak)
                                 s << "======";
                         else
-                                s << "==__==";
-                        if (i != 5)
-                                s << "\n";
+                                s << "==  ==";
+                        s << "      ";
                 }
-                s << logxx::endl;
+                s << "\n";
         }
+        s << logxx::endl;
 }
 
 dream_hacking::ComplexRangeSelector GenerateConditions(const PlayingCard &targetCard){
@@ -129,14 +140,16 @@ int main(int argc, char** argv) {
                 log(logxx::error) << "No sequences found" << logxx::endl;
                 return 1;
         } else {
-                auto &s = log(logxx::info);
-                std::shared_ptr<Medici> deck = calc.GetResult()[0];
-                deck->Collapse(true);
-                PrintDeck(deck, s);
-                s << logxx::endl;
-                IChing iching;
-                iching.LoadFromDeck(deck);
-                PrintIChing(iching);
+                auto results = calc.GetResult();
+                for (std::shared_ptr<Medici>& deck : results){
+                        auto &s = log(logxx::info);
+                        deck->Collapse(true);
+                        PrintDeck(deck, s);
+                        s << logxx::endl;
+                        IChing iching;
+                        iching.LoadFromDeck(deck);
+                        PrintIChing(iching);
+                }
                 return 0;
         }
 }
